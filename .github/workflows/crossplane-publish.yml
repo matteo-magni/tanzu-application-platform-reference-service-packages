@@ -1,0 +1,85 @@
+name: Reusable publish workflow
+
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
+      package:
+        type: string
+        required: true
+    outputs:
+      package_repository:
+        value: ${{ jobs.publish.outputs.package_repository }}
+      package_registry:
+        value: ${{ jobs.publish.outputs.package_registry }}
+
+jobs:
+
+  prepare:
+    runs-on: ubuntu-latest
+
+    env: ${{ fromJson(inputs.package) }}
+
+    outputs:
+      PACKAGE_PROVIDER: ${{ steps.package.outputs.PACKAGE_PROVIDER }}
+      PACKAGE_NAME: ${{ steps.package.outputs.PACKAGE_NAME }}
+    
+    steps:
+      - name: Get provider and package name
+        id: package
+        run: |
+          echo "PACKAGE_PROVIDER=$(jq -r .PACKAGE_PROVIDER <<<'${{ inputs.package }}')" >> $GITHUB_OUTPUT
+          echo "PACKAGE_NAME=$(jq -r .PACKAGE_NAME <<<'${{ inputs.package }}')" >> $GITHUB_OUTPUT
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+
+    outputs:
+      package_repository: ${{ env.PACKAGE_REPOSITORY }}
+      package_registry: ${{ env.PACKAGE_REGISTRY }}
+
+    env:
+      PACKAGE_VERSION: ${{ inputs.version }}
+      PACKAGE_REGISTRY: ghcr.io
+      PACKAGE_REPOSITORY: ${{ github.repository }}/${{ needs.prepare.outputs.PACKAGE_PROVIDER }}/crossplane/${{ needs.prepare.outputs.PACKAGE_NAME }}
+      PACKAGE_PROVIDER: ${{ needs.prepare.outputs.PACKAGE_PROVIDER }}
+      PACKAGE_NAME: ${{ needs.prepare.outputs.PACKAGE_NAME }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Install UXP
+        run: |
+          curl -sL "https://cli.upbound.io" | sh
+          sudo mv up /usr/local/bin/
+          up --version
+
+      - name: Install Carvel tools
+        uses: vmware-tanzu/carvel-setup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          only: ytt
+
+      - name: Log in to ${{ env.PACKAGE_REGISTRY }}
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9  # v1.10.0
+        with:
+          registry: ${{ env.PACKAGE_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dump info
+        run: |
+          env | sort
+
+      - name: Crossplane Package Publish
+        run: |
+          make crossplane-build
+          make crossplane-push

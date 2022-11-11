@@ -1,0 +1,30 @@
+name: Publish workflow
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  PACKAGE_REGISTRY: ghcr.io
+  PACKAGE_REPOSITORY_BASE: ${{ github.repository }}
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '*/crossplane/**'
+
+jobs:
+  pre-publish:
+    uses: ./.github/workflows/crossplane-prepublish.yml
+
+  publish:
+    needs:
+      - pre-publish
+    uses: ./.github/workflows/crossplane-publish.yml
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.pre-publish.outputs.packages) }}
+    with:
+      package: ${{ matrix.package }}
+      version: ${{ needs.pre-publish.outputs.version }}
