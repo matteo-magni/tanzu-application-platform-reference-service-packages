@@ -18,4 +18,4 @@ spec:
       name: default
     metadata:
       labels:
-        services.apps.tanzu.vmware.com/class: azure-mongodb
+        services.apps.tanzu.vmware.com/class: azure-mongodb3
