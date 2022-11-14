@@ -1,0 +1,116 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: #@ data.values.xrd.names.plural + "." + data.values.xrd.group
+spec:
+  group: #@ data.values.xrd.group
+  names: #@ data.values.xrd.names
+  claimNames: #@ data.values.xrd.claimNames
+  connectionSecretKeys:
+  - type
+  - provider
+  - host
+  - port
+  - database
+  - username
+  - password
+  versions:
+
+#! location: ""
+#! server:
+#!   version: "13"
+#!   instanceKind: [default, high-performance] 
+  #!   instance_type: "Standard_D2s_v3"
+  #!   instance_tier: "GeneralPurpose"
+#!   storageSize: [small, medium, large] (64, 256, 1024)
+  #!   instance_storage_size_gb: 128
+#! firewall_rules:
+#!     startIpAddress: ""
+#!     endIpAddress: ""
+
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              parameters:
+                type: object
+                properties:
+                  location:
+                    type: string
+                  providerConfig:
+                    type: string
+                    default: default
+                  version:
+                    type: string
+                    default: "13"
+                    enum: ["11", "12", "13"]
+                  instanceKind:
+                    type: string
+                    default: "default"
+                    enum: ["default", "high-performance"]
+                  storageSize:
+                    type: string
+                    default: "small"
+                    enum: ["small", "medium", "large"]
+                  databaseCollation:
+                    type: string
+                    default: "en_US.utf8"
+                  databaseCharset:
+                    type: string
+                    default: "utf8"  
+                  firewallRule:
+                    type: object
+                    default: 
+                      startIpAddress: "0.0.0.0"
+                      endIpAddress: "0.0.0.0"
+                    properties:
+                      startIpAddress:
+                        type: string
+                      endIpAddress:
+                        type: string
+                    required:
+                    - startIpAddress
+                    - endIpAddress
+                required:
+                - location
+            required:
+            - parameters
+    #!       status:
+    #!         type: object
+    #!         properties:
+    #!           resourceGroup:
+    #!             description: The resource group this Postgres server is in
+    #!             type: string
+    #!           mongodbVersion:
+    #!             description: The version of the Postgres server
+    #!             type: string
+    #!           location:
+    #!             description: The location of the Postgres server
+    #!             type: string
+    #!           endpoint:
+    #!             description: The endpoint of the Postgres server
+    #!             type: string
+    #! additionalPrinterColumns:
+    #! - name: endpoint
+    #!   type: string
+    #!   jsonPath: ".status.resourceGroup"
+    #! - name: mongodbVersion
+    #!   type: string
+    #!   jsonPath: ".status.mongodbVersion"
+    #! - name: location
+    #!   type: string
+    #!   jsonPath: ".status.location"
+    #! - name: endpoint
+    #!   type: string
+    #!   jsonPath: ".status.endpoint"
+    #! - name: connection-details
+    #!   type: string
+    #!   jsonPath: ".spec.publishConnectionDetailsTo.name"
