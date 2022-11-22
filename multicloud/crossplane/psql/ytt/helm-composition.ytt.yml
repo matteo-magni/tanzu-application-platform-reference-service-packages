@@ -40,9 +40,16 @@ spec:
 
     patches:
     - type: FromCompositeFieldPath
-      fromFieldPath: metadata.uid
+      fromFieldPath: metadata.name
       toFieldPath: spec.forProvider.manifest.metadata.name
-
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.name
+      toFieldPath: spec.publishConnectionDetailsTo.name
+      #!transforms:
+      #!- type: string
+      #!  string:
+      #!    type: Format
+      #!    fmt: '%s-password'
 
   - name: release
     base:
@@ -72,9 +79,9 @@ spec:
     - name: username
       fromFieldPath: spec.forProvider.values.global.postgresql.auth.username
       type: FromFieldPath
-    #!- name: host
-    #!  fromFieldPath: status.atProvider.address
-    #!  type: FromFieldPath
+    - name: host
+      fromFieldPath: metadata.labels.address
+      type: FromFieldPath
     - name: port
       value: "5432"
   
@@ -94,6 +101,9 @@ spec:
       fromFieldPath: metadata.uid
       toFieldPath: spec.forProvider.values.global.postgresql.auth.existingSecret
     - type: FromCompositeFieldPath
+      fromFieldPath: spec.claimRef.namespace
+      toFieldPath: spec.forProvider.namespace
+    - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.adminUsername
       toFieldPath: spec.forProvider.values.global.postgresql.auth.username
     - type: FromCompositeFieldPath
@@ -102,3 +112,17 @@ spec:
     - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.database
       toFieldPath: spec.forProvider.values.global.postgresql.auth.database
+    - type: FromCompositeFieldPath
+      fromFieldPath: status.address
+      toFieldPath: metadata.labels.address
+    - type: CombineToComposite
+      toFieldPath: status.address
+      policy:
+        fromFieldPath: Required
+      combine:
+        strategy: string
+        string:
+          fmt: '%s.%s.svc.cluster.local'
+        variables:
+        - fromFieldPath: metadata.name
+        - fromFieldPath: spec.forProvider.namespace
