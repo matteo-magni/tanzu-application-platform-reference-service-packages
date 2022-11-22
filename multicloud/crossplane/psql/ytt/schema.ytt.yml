@@ -14,12 +14,17 @@ xrd:
 configurationName: "multicloud-psql"
 cloudServiceBindingType: "postgresql"
 
-provider:
+providers:
   azure:
     name: azure
     image: xpkg.upbound.io/upbound/provider-azure
     version: ">=v0.18.1"
     configRef: default
+
+  helm:
+    name: helm
+    image: xpkg.upbound.io/crossplane-contrib/provider-helm
+    version: ">=v0.12.0"
 
 crossplane:
   #@schema/title "CrossplaneNamespace"
@@ -34,4 +39,4 @@ storeConfig:
   #@schema/desc "The name of the StoreConfig"
   name: "default"
 
-
+version: ""

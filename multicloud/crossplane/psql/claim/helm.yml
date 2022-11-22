@@ -1,0 +1,21 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: #@ data.values.xrd.group + "/" + data.values.xrd.version
+kind: #@ data.values.xrd.claimNames.kind
+metadata:
+  name: postgresql-001
+spec:
+  compositionSelector:
+    matchLabels:
+      provider: helm
+  parameters:
+    location: local
+    version: #@ data.values.version
+  publishConnectionDetailsTo:
+    name: postgresql-helm-bindable-001
+    configRef:
+      name: default
+    metadata:
+      labels:
+        services.apps.tanzu.vmware.com/class: helm-postgresql
+      type: servicebinding.io/postgresql

@@ -1,0 +1,104 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: #@ data.values.providers.helm.name + "-" + data.values.cloudServiceBindingType
+  labels:
+    crossplane.io/xrd: #@ data.values.xrd.names.plural + "." + data.values.xrd.group
+    provider: #@ data.values.providers.helm.name
+    database: #@ data.values.cloudServiceBindingType
+spec:
+  publishConnectionDetailsWithStoreConfigRef:
+    name: #@ data.values.storeConfig.name
+  compositeTypeRef:
+    apiVersion: #@ data.values.xrd.group + "/" + data.values.xrd.version
+    kind: #@ data.values.xrd.names.kind
+  resources:
+
+  - name: password
+    base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.k14s.io/v1alpha1
+            kind: Password
+            metadata:
+              namespace: #@ data.values.crossplane.namespace
+            spec:
+              length: 64
+              secretTemplate:
+                type: Opaque
+                stringData:
+                  password: $(value)
+
+    connectionDetails:
+    - name: password
+      fromConnectionSecretKey: attribute.password
+
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.forProvider.manifest.metadata.name
+
+
+  - name: release
+    base:
+      apiVersion: helm.crossplane.io/v1beta1
+      kind: Release
+      spec:
+        forProvider:
+          namespace: #@ data.values.crossplane.namespace
+          chart:
+            name: postgresql
+            repository: https://charts.bitnami.com/bitnami
+            version: 12.1.2
+          values:
+            architecture: standalone
+            primary:
+              initdb:
+                args: "-E UTF8 --locale=en_US"
+
+    connectionDetails:
+    - name: type
+      value: postgresql
+    - name: provider
+      value: #@ data.values.providers.helm.name
+    - name: database
+      fromFieldPath: spec.forProvider.values.global.postgresql.auth.database
+      type: FromFieldPath
+    - name: username
+      fromFieldPath: spec.forProvider.values.global.postgresql.auth.username
+      type: FromFieldPath
+    #!- name: host
+    #!  fromFieldPath: status.atProvider.address
+    #!  type: FromFieldPath
+    - name: port
+      value: "5432"
+  
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.version
+      toFieldPath: 'values."image.tag"'
+      transforms:
+      - type: map
+        map:
+          "11": "11.18.0"
+          "12": "12.13.0"
+          "13": "13.9.0"
+          "14": "14.6.0"
+          "15": "15.1.0"
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.forProvider.values.global.postgresql.auth.existingSecret
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.adminUsername
+      toFieldPath: spec.forProvider.values.global.postgresql.auth.username
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.storageClass
+      toFieldPath: spec.forProvider.values.primary.persistence.storageClass
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.database
+      toFieldPath: spec.forProvider.values.global.postgresql.auth.database

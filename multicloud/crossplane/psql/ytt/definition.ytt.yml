@@ -45,40 +45,49 @@ spec:
                 properties:
                   location:
                     type: string
-                  providerConfig:
-                    type: string
-                    default: default
+                  #! providerConfig:
+                  #!   type: string
+                  #!   default: default
                   version:
                     type: string
                     default: "13"
                     enum: ["11", "12", "13"]
-                  instanceKind:
+                  adminUsername:
                     type: string
-                    default: "default"
-                    enum: ["default", "high-performance"]
-                  storageSize:
+                    default: root
+                  storageClass:
                     type: string
-                    default: "small"
-                    enum: ["small", "medium", "large"]
-                  databaseCollation:
+                    default: default
+                  database:
                     type: string
-                    default: "en_US.utf8"
-                  databaseCharset:
-                    type: string
-                    default: "utf8"  
-                  firewallRule:
-                    type: object
-                    default: 
-                      startIpAddress: "0.0.0.0"
-                      endIpAddress: "0.0.0.0"
-                    properties:
-                      startIpAddress:
-                        type: string
-                      endIpAddress:
-                        type: string
-                    required:
-                    - startIpAddress
-                    - endIpAddress
+                    default: postgres
+                  #! instanceKind:
+                  #!   type: string
+                  #!   default: "default"
+                  #!   enum: ["default", "high-performance"]
+                  #! storageSize:
+                  #!   type: string
+                  #!   default: "small"
+                  #!   enum: ["small", "medium", "large"]
+                  #! databaseCollation:
+                  #!   type: string
+                  #!   default: "en_US.utf8"
+                  #! databaseCharset:
+                  #!   type: string
+                  #!   default: "utf8"  
+                  #! firewallRule:
+                  #!   type: object
+                  #!   default: 
+                  #!     startIpAddress: "0.0.0.0"
+                  #!     endIpAddress: "0.0.0.0"
+                  #!   properties:
+                  #!     startIpAddress:
+                  #!       type: string
+                  #!     endIpAddress:
+                  #!       type: string
+                  #!   required:
+                  #!   - startIpAddress
+                  #!   - endIpAddress
                 required:
                 - location
             required:
