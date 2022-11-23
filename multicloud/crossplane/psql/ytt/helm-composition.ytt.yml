@@ -18,38 +18,35 @@ spec:
 
   - name: password
     base:
-      apiVersion: kubernetes.crossplane.io/v1alpha1
-      kind: Object
+      apiVersion: tf.crossplane.io/v1alpha1
+      kind: Workspace
       spec:
         forProvider:
-          manifest:
-            apiVersion: secretgen.k14s.io/v1alpha1
-            kind: Password
-            metadata:
-              namespace: #@ data.values.crossplane.namespace
-            spec:
-              length: 64
-              secretTemplate:
-                type: Opaque
-                stringData:
-                  password: $(value)
+          module: |
+            resource "random_password" "password" {
+              length  = 64
+              special = false
+            }
 
-    connectionDetails:
-    - name: password
-      fromConnectionSecretKey: attribute.password
-
+            output "password" {
+              value = random_password.password.result
+              sensitive = true
+            }
+          source: Inline
+        writeConnectionSecretToRef:
+          namespace: #@ data.values.crossplane.namespace
     patches:
     - type: FromCompositeFieldPath
-      fromFieldPath: metadata.name
-      toFieldPath: spec.forProvider.manifest.metadata.name
-    - type: FromCompositeFieldPath
-      fromFieldPath: metadata.name
-      toFieldPath: spec.publishConnectionDetailsTo.name
-      #!transforms:
-      #!- type: string
-      #!  string:
-      #!    type: Format
-      #!    fmt: '%s-password'
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.writeConnectionSecretToRef.name
+      transforms:
+        - type: string
+          string:
+            type: Format
+            fmt: '%s-postgresql-admin'
+
+    connectionDetails:
+    - fromConnectionSecretKey: password
 
   - name: release
     base:
@@ -100,9 +97,11 @@ spec:
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.uid
       toFieldPath: spec.forProvider.values.global.postgresql.auth.existingSecret
-    - type: FromCompositeFieldPath
-      fromFieldPath: spec.claimRef.namespace
-      toFieldPath: spec.forProvider.namespace
+      transforms:
+        - type: string
+          string:
+            type: Format
+            fmt: '%s-postgresql-admin'
     - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.adminUsername
       toFieldPath: spec.forProvider.values.global.postgresql.auth.username
