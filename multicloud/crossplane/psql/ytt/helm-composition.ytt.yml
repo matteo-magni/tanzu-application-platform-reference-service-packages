@@ -16,6 +16,41 @@ spec:
     kind: #@ data.values.xrd.names.kind
   resources:
 
+  - name: tf-providerconfig
+    base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: tf.crossplane.io/v1alpha1
+            kind: ProviderConfig
+            spec:
+              credentials: []
+              #@yaml/text-templated-strings
+              configuration: |
+                terraform {
+                  required_providers {
+                    random = {
+                      source = "hashicorp/random"
+                      version = "3.4.3"
+                    }
+                  }
+            
+                  backend "kubernetes" {
+                    secret_suffix     = "providerconfig-default"
+                    namespace         = "(@= data.values.crossplane.namespace @)"
+                    in_cluster_config = true
+                  }
+                }
+
+                provider "random" {}
+
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.forProvider.manifest.metadata.name
+
   - name: password
     base:
       apiVersion: tf.crossplane.io/v1alpha1
@@ -35,6 +70,7 @@ spec:
           source: Inline
         writeConnectionSecretToRef:
           namespace: #@ data.values.crossplane.namespace
+
     patches:
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.uid
@@ -44,6 +80,9 @@ spec:
           string:
             type: Format
             fmt: '%s-postgresql-admin'
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.providerConfigRef.name
 
     connectionDetails:
     - fromConnectionSecretKey: password

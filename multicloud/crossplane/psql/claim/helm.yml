@@ -3,7 +3,7 @@
 apiVersion: #@ data.values.xrd.group + "/" + data.values.xrd.version
 kind: #@ data.values.xrd.claimNames.kind
 metadata:
-  name: postgresql-025
+  name: postgresql-027
 spec:
   compositionSelector:
     matchLabels:
@@ -12,7 +12,7 @@ spec:
     location: local
     version: #@ data.values.version
   publishConnectionDetailsTo:
-    name: postgresql-helm-bindable-025
+    name: postgresql-helm-bindable-027
     configRef:
       name: default
     metadata:
