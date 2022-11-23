@@ -64,7 +64,7 @@ spec:
             }
 
             output "password" {
-              value = random_password.password.result
+              value     = random_password.password.result
               sensitive = true
             }
           source: Inline
@@ -100,9 +100,11 @@ spec:
             version: 12.1.2
           values:
             architecture: standalone
-            primary:
-              initdb:
-                args: "-E UTF8 --locale=en_US"
+            global:
+              postgresql:
+                auth:
+                  secretKeys:
+                    adminPasswordKey: password
 
     connectionDetails:
     - name: type
@@ -122,6 +124,17 @@ spec:
       value: "5432"
   
     patches:
+    - type: CombineFromComposite
+      toFieldPath: spec.forProvider.values.primary.initdb.args
+      policy:
+        fromFieldPath: Required
+      combine:
+        strategy: string
+        string:
+          fmt: '-E %s --locale=%s'
+        variables:
+        - fromFieldPath: spec.parameters.charset
+        - fromFieldPath: spec.parameters.collation
     - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.version
       toFieldPath: 'values."image.tag"'
@@ -153,6 +166,9 @@ spec:
     - type: FromCompositeFieldPath
       fromFieldPath: status.address
       toFieldPath: metadata.labels.address
+    - type: ToCompositeFieldPath
+      toFieldPath: status.location
+      fromFieldPath: spec.forProvider.namespace
     - type: CombineToComposite
       toFieldPath: status.address
       policy:

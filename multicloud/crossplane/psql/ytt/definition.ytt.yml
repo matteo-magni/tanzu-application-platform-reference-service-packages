@@ -42,7 +42,7 @@ spec:
                     enum: ["11", "12", "13"]
                   adminUsername:
                     type: string
-                    default: root
+                    default: postgres
                   storageClass:
                     type: string
                     default: default
@@ -57,12 +57,12 @@ spec:
                   #!   type: string
                   #!   default: "small"
                   #!   enum: ["small", "medium", "large"]
-                  #! databaseCollation:
-                  #!   type: string
-                  #!   default: "en_US.utf8"
-                  #! databaseCharset:
-                  #!   type: string
-                  #!   default: "utf8"  
+                  collation:
+                    type: string
+                    default: "en_US.utf8"
+                  charset:
+                    type: string
+                    default: "utf8"  
                   #! firewallRule:
                   #!   type: object
                   #!   default: 
@@ -85,10 +85,15 @@ spec:
             properties:
               address:
                 type: string
+              location:
+                type: string
     additionalPrinterColumns:
     - name: address
       type: string
-      jsonPath: ".status.address"
+      jsonPath: .status.address
+    - name: location
+      type: string
+      jsonPath: .status.location
     - name: connection-details
       type: string
-      jsonPath: ".spec.publishConnectionDetailsTo.name"
+      jsonPath: .spec.publishConnectionDetailsTo.name

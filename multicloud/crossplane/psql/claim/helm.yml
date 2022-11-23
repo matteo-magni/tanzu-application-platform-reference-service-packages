@@ -3,7 +3,7 @@
 apiVersion: #@ data.values.xrd.group + "/" + data.values.xrd.version
 kind: #@ data.values.xrd.claimNames.kind
 metadata:
-  name: postgresql-027
+  name: postgresql-038
 spec:
   compositionSelector:
     matchLabels:
@@ -11,8 +11,11 @@ spec:
   parameters:
     location: local
     version: #@ data.values.version
+    database: petclinic
+    collation: en_GB.utf8
+    storageClass: gp2
   publishConnectionDetailsTo:
-    name: postgresql-helm-bindable-027
+    name: postgresql-helm-bindable-038
     configRef:
       name: default
     metadata:
