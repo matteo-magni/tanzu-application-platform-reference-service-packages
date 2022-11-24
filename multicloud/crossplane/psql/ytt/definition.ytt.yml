@@ -65,7 +65,7 @@ spec:
                     default: "utf8"  
                   #! firewallRule:
                   #!   type: object
-                  #!   default: 
+                  #!   default:
                   #!     startIpAddress: "0.0.0.0"
                   #!     endIpAddress: "0.0.0.0"
                   #!   properties:
@@ -87,6 +87,11 @@ spec:
                 type: string
               location:
                 type: string
+              binding:
+                type: object
+                properties:
+                  name:
+                    type: string
     additionalPrinterColumns:
     - name: address
       type: string

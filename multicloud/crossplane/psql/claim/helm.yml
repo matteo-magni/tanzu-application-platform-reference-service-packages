@@ -3,7 +3,9 @@
 apiVersion: #@ data.values.xrd.group + "/" + data.values.xrd.version
 kind: #@ data.values.xrd.claimNames.kind
 metadata:
-  name: postgresql-038
+  name: postgresql-049
+  labels:
+    services.apps.tanzu.vmware.com/claimable: "true"
 spec:
   compositionSelector:
     matchLabels:
@@ -14,11 +16,3 @@ spec:
     database: petclinic
     collation: en_GB.utf8
     storageClass: gp2
-  publishConnectionDetailsTo:
-    name: postgresql-helm-bindable-038
-    configRef:
-      name: default
-    metadata:
-      labels:
-        services.apps.tanzu.vmware.com/class: helm-postgresql
-      type: servicebinding.io/postgresql

@@ -9,8 +9,7 @@ metadata:
     provider: #@ data.values.providers.helm.name
     database: #@ data.values.cloudServiceBindingType
 spec:
-  publishConnectionDetailsWithStoreConfigRef:
-    name: #@ data.values.storeConfig.name
+  writeConnectionSecretsToNamespace: #@ data.values.crossplane.namespace
   compositeTypeRef:
     apiVersion: #@ data.values.xrd.group + "/" + data.values.xrd.version
     kind: #@ data.values.xrd.names.kind
@@ -75,14 +74,18 @@ spec:
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.uid
       toFieldPath: spec.writeConnectionSecretToRef.name
-      transforms:
-        - type: string
-          string:
-            type: Format
-            fmt: '%s-postgresql-admin'
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.uid
       toFieldPath: spec.providerConfigRef.name
+    - type: ToCompositeFieldPath
+      fromFieldPath: metadata.labels[crossplane.io/composite]
+      toFieldPath: spec.writeConnectionSecretToRef.name
+    - type: ToCompositeFieldPath
+      fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
+      toFieldPath: spec.writeConnectionSecretToRef.namespace
+    - type: ToCompositeFieldPath
+      fromFieldPath: metadata.labels[crossplane.io/composite]
+      toFieldPath: status.binding.name
 
     connectionDetails:
     - fromConnectionSecretKey: password
