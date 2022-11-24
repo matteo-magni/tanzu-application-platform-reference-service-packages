@@ -137,7 +137,7 @@ spec:
         - fromFieldPath: spec.parameters.collation
     - type: FromCompositeFieldPath
       fromFieldPath: spec.parameters.version
-      toFieldPath: 'values."image.tag"'
+      toFieldPath: spec.forProvider.values.image.tag
       transforms:
       - type: map
         map:
