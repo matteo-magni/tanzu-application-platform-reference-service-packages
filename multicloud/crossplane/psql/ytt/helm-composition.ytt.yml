@@ -78,13 +78,13 @@ spec:
       fromFieldPath: metadata.uid
       toFieldPath: spec.providerConfigRef.name
     - type: ToCompositeFieldPath
-      fromFieldPath: metadata.labels[crossplane.io/composite]
+      fromFieldPath: metadata.labels[crossplane.io/claim-name]
       toFieldPath: spec.writeConnectionSecretToRef.name
     - type: ToCompositeFieldPath
       fromFieldPath: metadata.labels[crossplane.io/claim-namespace]
       toFieldPath: spec.writeConnectionSecretToRef.namespace
     - type: ToCompositeFieldPath
-      fromFieldPath: metadata.labels[crossplane.io/composite]
+      fromFieldPath: metadata.labels[crossplane.io/claim-name]
       toFieldPath: status.binding.name
 
     connectionDetails:
