@@ -1,0 +1,77 @@
+name: Reusable workflow for listing changed packages
+
+on:
+
+  workflow_call:
+
+    inputs:
+      basedir:
+        type: string
+        description: Packages base directory path
+        default: ""
+      ref:
+        type: string
+        description: Git reference to compare HEAD with
+        default: HEAD~1
+
+    outputs:
+      all:
+        value: ${{ jobs.list-packages.outputs.all }}
+      crossplane:
+        value: ${{ jobs.list-packages.outputs.crossplane }}
+      carvel:
+        value: ${{ jobs.list-packages.outputs.carvel }}
+      crossplane_publish:
+        value: ${{ jobs.list-packages.outputs.crossplane_publish }}
+      carvel_publish:
+        value: ${{ jobs.list-packages.outputs.carvel_publish }}
+
+jobs:
+
+  list-packages:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      all: ${{ steps.list.outputs.packages }}
+      crossplane: ${{ steps.filter.outputs.crossplane }}
+      carvel: ${{ steps.filter.outputs.carvel }}
+      crossplane_publish: ${{ steps.filter.outputs.crossplane_publish }}
+      carvel_publish: ${{ steps.filter.outputs.carvel_publish }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+
+      - name: List packages that have changed
+        id: list
+        run: |
+          packages=$(git diff-tree --name-only -r --diff-filter=ACM ${GIT_REF} HEAD | jq -ncrR --arg BASEDIR ${BASEDIR%%/} '
+            [inputs]
+            | map(capture("^"+$BASEDIR+"/(?<p>.*)$").p
+              | split("/")
+              | { "provider": .[0], "operator": .[1], "name": .[2] }
+            )
+            | map(select(.provider!=null and .operator!=null and .name!=null))
+            | unique
+            | { "include": . }
+          ')
+          echo "packages=${packages}" | tee -a $GITHUB_OUTPUT
+        env:
+          BASEDIR: ${{ inputs.basedir }}
+          GIT_REF: ${{ inputs.ref }}
+
+      - name: Filter packages
+        id: filter
+        run: |
+          crossplane=$(jq -c '.include|=map(select(.operator=="crossplane"))' <<< $PACKAGES)
+          echo "crossplane=${crossplane}" | tee -a $GITHUB_OUTPUT
+          echo "crossplane_publish=$(jq '.include|length > 0' <<<${crossplane})" | tee -a $GITHUB_OUTPUT
+
+          carvel=$(jq -c '.include|=map(select(.operator!="crossplane"))' <<< $PACKAGES)
+          echo "carvel=${carvel}" | tee -a $GITHUB_OUTPUT
+          echo "carvel_publish=$(jq '.include|length > 0' <<<${carvel})" | tee -a $GITHUB_OUTPUT
+        env:
+          PACKAGES: ${{ steps.list.outputs.packages }}

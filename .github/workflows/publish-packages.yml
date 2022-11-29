@@ -1,0 +1,60 @@
+name: Publish packages
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/*/*/**'
+
+  pull_request:
+    types: [opened, ready_for_review, reopened, synchronize]
+    branches:
+      - main
+    paths:
+      - 'packages/*/*/*/**'
+
+jobs:
+
+  list-packages:
+    uses: ./.github/workflows/reusable-list-packages.yml
+    with:
+      basedir: packages
+
+  bump-version:
+    if: needs.list-packages.outputs.crossplane_publish == 'true' || needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-bump-version.yml
+    needs:
+      - list-packages
+
+  crossplane-publish:
+    if: needs.list-packages.outputs.crossplane_publish == 'true'
+    needs:
+      - bump-version
+      - list-packages
+    uses: ./.github/workflows/reusable-crossplane-publish.yml
+    strategy:
+      matrix: ${{ fromJson(needs.list-packages.outputs.crossplane) }}
+    with:
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}
+      run-test: ${{ github.event_name == 'pull_request' }}
+
+  carvel-publish:
+    if: needs.list-packages.outputs.carvel_publish == 'true'
+    needs:
+      - bump-version
+      - list-packages
+    uses: ./.github/workflows/reusable-carvel-publish.yml
+    strategy:
+      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
+    with:
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}
+      run-test: ${{ github.event_name == 'pull_request' }}
