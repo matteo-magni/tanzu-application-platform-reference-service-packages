@@ -49,33 +49,12 @@ spec:
                   database:
                     type: string
                     default: postgres
-                  #! instanceKind:
-                  #!   type: string
-                  #!   default: "default"
-                  #!   enum: ["default", "high-performance"]
-                  #! storageSize:
-                  #!   type: string
-                  #!   default: "small"
-                  #!   enum: ["small", "medium", "large"]
                   collation:
                     type: string
-                    default: "en_US.utf8"
+                    default: en_US.utf8
                   charset:
                     type: string
-                    default: "utf8"  
-                  #! firewallRule:
-                  #!   type: object
-                  #!   default:
-                  #!     startIpAddress: "0.0.0.0"
-                  #!     endIpAddress: "0.0.0.0"
-                  #!   properties:
-                  #!     startIpAddress:
-                  #!       type: string
-                  #!     endIpAddress:
-                  #!       type: string
-                  #!   required:
-                  #!   - startIpAddress
-                  #!   - endIpAddress
+                    default: utf8
                 required:
                 - location
             required:
@@ -83,6 +62,8 @@ spec:
           status:
             type: object
             properties:
+              version:
+                type: string
               address:
                 type: string
               location:
@@ -99,6 +80,9 @@ spec:
     - name: location
       type: string
       jsonPath: .status.location
+    - name: version
+      type: string
+      jsonPath: .status.version
     - name: connection-details
       type: string
-      jsonPath: .spec.publishConnectionDetailsTo.name
+      jsonPath: .status.binding.name

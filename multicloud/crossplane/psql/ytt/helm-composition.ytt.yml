@@ -183,3 +183,6 @@ spec:
         variables:
         - fromFieldPath: metadata.name
         - fromFieldPath: spec.forProvider.namespace
+    - type: ToCompositeFieldPath
+      fromFieldPath: spec.forProvider.values.image.tag
+      toFieldPath: status.version
