@@ -71,6 +71,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
 
       - name: Install Carvel tools
         uses: vmware-tanzu/carvel-setup-action@v1
@@ -107,7 +109,7 @@ jobs:
       # They will be added to a PR from branch ${REPO_PR_BRANCH_NAME} to main
       - name: Prepare pull request
         run: |
-          git checkout ${REPO_PR_BRANCH_NAME} || git checkout -b ${REPO_PR_BRANCH_NAME}
+          git checkout ${REPO_PR_BRANCH_NAME} || git switch --orphan ${REPO_PR_BRANCH_NAME}
           git add ${CARVEL_REPO_DIR}
           git commit -m "add package ${PACKAGE_PROVIDER}/${PACKAGE_PACKAGING}/${PACKAGE_NAME} version ${PACKAGE_VERSION}"
           git push -u origin ${REPO_PR_BRANCH_NAME}
