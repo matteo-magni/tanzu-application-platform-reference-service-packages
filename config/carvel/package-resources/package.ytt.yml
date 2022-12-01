@@ -1,0 +1,23 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: Package
+metadata:
+  name: #@ data.values.metadata.name + "." + data.values.version
+spec:
+  refName: #@ data.values.metadata.name
+  releasedAt: null
+  template:
+    spec:
+      deploy:
+      - kapp: {}
+      fetch:
+      - git: {}
+      template:
+      - ytt:
+          paths:
+          - config
+      - kbld: {}
+  valuesSchema:
+    openAPIv3: null
+  version: #@ data.values.version
