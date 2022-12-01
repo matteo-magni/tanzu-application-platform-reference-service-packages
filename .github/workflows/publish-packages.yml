@@ -62,7 +62,6 @@ jobs:
       package_version: ${{ needs.bump-version.outputs.version }}
       packages_basedir: ${{ needs.list-packages.outputs.basedir }}
       package_path: ${{ matrix.path }}
-      run-test: ${{ github.event_name == 'pull_request' }}
 
   carvel-prepare-repo:
     needs:
@@ -70,6 +69,9 @@ jobs:
       - list-packages
       - carvel-publish
     runs-on: ubuntu-latest
+
+    outputs:
+      repo-branch-name: ${{ steps.git.outputs.REPO_BRANCH_NAME }}
 
     env:
       PACKAGE_VERSION: ${{ needs.bump-version.outputs.version }}
@@ -83,6 +85,7 @@ jobs:
           fetch-depth: '0'
 
       - name: Prepare git client
+        id: git
         run: |
           git config --global user.email "${{ github.event.repository.name }}@${{ github.repository_owner }}.github.io"
           git config --global user.name "GitHub Actions Workflow"
@@ -90,6 +93,7 @@ jobs:
           sleep 5 && git fetch --all
 
           echo "CURRENT_BRANCH=$(git branch --show-current)" >> $GITHUB_ENV
+          echo "REPO_BRANCH_NAME=$REPO_BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Create branch and pull request
         run: |
@@ -121,3 +125,29 @@ jobs:
         env:
           PACKAGES_LIST: ${{ needs.list-packages.outputs.carvel }}
           GH_TOKEN: ${{ github.token }}
+
+  carvel-repo-publish:
+    if: needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-carvel-repo-publish.yml
+    needs:
+      - bump-version
+      - carvel-prepare-repo
+    with:
+      git_ref: ${{ needs.carvel-prepare-repo.outputs.repo-branch-name }}
+      repo_version: ${{ needs.bump-version.outputs.version }}
+      release: true
+
+  carvel-test:
+    if: needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-carvel-test.yml
+    needs:
+      - list-packages
+      - bump-version
+      - carvel-repo-publish
+    strategy:
+      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
+    with:
+      repo_version: ${{ needs.bump-version.outputs.version }}
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}

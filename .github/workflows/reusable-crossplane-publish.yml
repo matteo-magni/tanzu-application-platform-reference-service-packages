@@ -9,6 +9,9 @@ on:
         type: string
         description: Packages base directory path
         default: packages
+      package_path:
+        type: string
+        required: true
       package_version:
         type: string
         required: true
@@ -50,8 +53,8 @@ jobs:
       PACKAGE_PROVIDER: ${{ inputs.package_provider }}
       PACKAGE_NAME: ${{ inputs.package_name }}
       PACKAGES_BASEDIR: ${{ inputs.packages_basedir }}
-      PACKAGE_PACKAGING: crossplane
-
+      PACKAGE_DIR: ${{ inputs.packages_basedir }}/${{ inputs.package_path }}
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v3
