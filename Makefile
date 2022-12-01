@@ -10,7 +10,6 @@
 # 
 # PACKAGE_BUILD_BASE_DIR = ./package-build
 # PACKAGE_BUILD_DIR = ${PACKAGE_BUILD_BASE_DIR}/${PACKAGE_NAME}
-REPO_BASEDIR = ./packages-repo
 # 
 # PACKAGE_TEST_DATA_DIR_NAME = test-data
 # REPOSITORY_DIR = ../tap-reference-packages-repository
@@ -74,22 +73,26 @@ REPO_BASEDIR = ./packages-repo
 # imgpkg-push: imgpkg-push-prepare
 # 	imgpkg push -b ${PACKAGE_REGISTRY}/${PACKAGE_REPOSITORY}:${PACKAGE_VERSION} -f ${PACKAGE_BUILD_DIR}/
 
-PACKAGES_BASEDIR ?= "packages"
+PACKAGES_BASEDIR ?= packages
 PACKAGE_DIR = ${PACKAGES_BASEDIR}/${PACKAGE_PROVIDER}/${PACKAGE_PACKAGING}/${PACKAGE_NAME}
 
-release-prepare:
-	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-resources -f ${PACKAGE_DIR}/package-metadata.yml -v version=${PACKAGE_VERSION} > ${PACKAGE_DIR}/package-resources.yml
-	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-build -v registry=${PACKAGE_REGISTRY} -v repository=${PACKAGE_REPOSITORY} -v buildValues=${PACKAGE_BUILD_VALUES} > ${PACKAGE_DIR}/package-build.yml
+CARVEL_REPO_DIR ?= repository
 
-kctrl-release: release-prepare
-	kctrl package release --chdir "${PACKAGE_DIR}" --version="${PACKAGE_VERSION}" --tag="${PACKAGE_VERSION}" --repo-output="${PWD}/${REPO_BASEDIR}" -y
+#TODO purge older versions according to a TBD retention policy
+
+kctrl-release-prepare:
+	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-resources -f ${PACKAGE_DIR}/package-metadata.yml -v version=${PACKAGE_VERSION} > ${PACKAGE_DIR}/package-resources.yml
+	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-build -v registry=${PACKAGE_REGISTRY} -v repository=${PACKAGE_REPOSITORY} -v buildValues=$(shell [ -e ${PACKAGE_DIR}/${PACKAGE_BUILD_VALUES} ] && echo ${PACKAGE_BUILD_VALUES} ) > ${PACKAGE_DIR}/package-build.yml
+
+kctrl-release: kctrl-release-prepare
+	kctrl package release --chdir "${PACKAGE_DIR}" --version="${PACKAGE_VERSION}" --tag="${PACKAGE_VERSION}" --repo-output="${PWD}/${CARVEL_REPO_DIR}" -y
 
 kctrl-repo-release-prepare:
-	mkdir -p ${REPO_BASEDIR}
-	ytt -f config/carvel/pkgrepo-build -v name=${REPO_NAME} -v registry=${REPO_REGISTRY} -v repository=${REPO_REPOSITORY} > ${REPO_BASEDIR}/pkgrepo-build.yml
+	mkdir -p ${CARVEL_REPO_DIR}
+	ytt -f config/carvel/pkgrepo-build -v name=${CARVEL_REPO_NAME} -v registry=${CARVEL_REPO_REGISTRY} -v repository=${CARVEL_REPO_REPOSITORY} > ${CARVEL_REPO_DIR}/pkgrepo-build.yml
 
 kctrl-repo-release: kctrl-repo-release-prepare
-	kctrl package repository release --debug --chdir ${REPO_BASEDIR} -v ${REPO_VERSION} -y
+	kctrl package repository release --chdir ${CARVEL_REPO_DIR} -v ${CARVEL_REPO_VERSION} -y
 
 # yq -i '.spec.fetch.imgpkgBundle.image=(.spec.fetch.imgpkgBundle.image|split("@")|.[0])+":"+.metadata.annotations."kctrl.carvel.dev/repository-version"' ${REPO_BASEDIR}/package-repository.yml
 
