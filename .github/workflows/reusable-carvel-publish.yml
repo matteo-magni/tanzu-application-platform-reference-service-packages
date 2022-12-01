@@ -5,6 +5,10 @@ on:
   workflow_call:
 
     inputs:
+      packages_basedir:
+        type: string
+        description: Packages base directory path
+        default: packages
       package_version:
         type: string
         required: true
@@ -23,6 +27,9 @@ on:
       kind-version:
         type: string
         default: v0.16.0
+      kctrl-version:
+        type: string
+        default: v0.43.2
 
     outputs:
       package_repository:
@@ -45,12 +52,48 @@ jobs:
       PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/carvel/${{ inputs.package_name }}
       PACKAGE_PROVIDER: ${{ inputs.package_provider }}
       PACKAGE_NAME: ${{ inputs.package_name }}
+      PACKAGES_BASEDIR: ${{ inputs.packages_basedir }}
+      PACKAGE_PACKAGING: carvel
 
     steps:
 
-      - name: Dump info
+      - name: Install Carvel tools
+        uses: vmware-tanzu/carvel-setup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          kctrl: ${{ inputs.kctrl-version }}
+
+      - name: Kctrl Release
+        run: make kctrl-release
+        env:
+          IMGPKG_REGISTRY_HOSTNAME: ${{ env.PACKAGE_REGISTRY }}
+          IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
+          IMGPKG_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Imgpkg push
+        run: make imgpkg-push
+        env:
+          IMGPKG_REGISTRY_HOSTNAME: ${{ env.PACKAGE_REGISTRY }}
+          IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
+          IMGPKG_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get FQDN of package
+        id: package_fqdn
         run: |
-          env | sort
+          echo "fqdn=$(yq e '.metadata.name' packages/${{ matrix.package }}/package-metadata.yml)" >> $GITHUB_OUTPUT
+
+      - name: Rename package manifest file
+        run: |
+          cd packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}
+          mv ${{ needs.pre-publish.outputs.version }}.yml package.yml
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.pre-publish.outputs.version }}
+          fail_on_unmatched_files: true
+          files: |
+            packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}/*.yml
 
   test:
     if: inputs.run-test
