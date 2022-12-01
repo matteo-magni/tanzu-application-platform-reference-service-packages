@@ -18,6 +18,14 @@ on:
       package_provider:
         type: string
         required: true
+      package_build_values:
+        type: string
+        description: File name holding mandatory values for ytt templates to prevent build failure
+        default: build-values.yml
+      repo_dir:
+        type: string
+        description: Directory path to hold the contents of the Carvel repository
+        default: repository
       run-test:
         type: boolean
         default: false
@@ -54,8 +62,14 @@ jobs:
       PACKAGE_NAME: ${{ inputs.package_name }}
       PACKAGES_BASEDIR: ${{ inputs.packages_basedir }}
       PACKAGE_PACKAGING: carvel
+      PACKAGE_BUILD_VALUES: ${{ inputs.package_build_values }}
+      CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
+      REPO_PR_BRANCH_NAME: carvel-repo
 
     steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Install Carvel tools
         uses: vmware-tanzu/carvel-setup-action@v1
@@ -70,30 +84,29 @@ jobs:
           IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
           IMGPKG_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Imgpkg push
-        run: make imgpkg-push
-        env:
-          IMGPKG_REGISTRY_HOSTNAME: ${{ env.PACKAGE_REGISTRY }}
-          IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
-          IMGPKG_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Get FQDN of package
+      #   id: package_fqdn
+      #   run: |
+      #     echo "fqdn=$(yq e '.metadata.name' packages/${{ matrix.package }}/package-metadata.yml)" >> $GITHUB_OUTPUT
 
-      - name: Get FQDN of package
-        id: package_fqdn
-        run: |
-          echo "fqdn=$(yq e '.metadata.name' packages/${{ matrix.package }}/package-metadata.yml)" >> $GITHUB_OUTPUT
+      # - name: Rename package manifest file
+      #   run: |
+      #     cd packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}
+      #     mv ${{ needs.pre-publish.outputs.version }}.yml package.yml
 
-      - name: Rename package manifest file
-        run: |
-          cd packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}
-          mv ${{ needs.pre-publish.outputs.version }}.yml package.yml
+      # - name: Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     tag_name: ${{ needs.pre-publish.outputs.version }}
+      #     fail_on_unmatched_files: true
+      #     files: |
+      #       packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}/*.yml
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ needs.pre-publish.outputs.version }}
-          fail_on_unmatched_files: true
-          files: |
-            packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}/*.yml
+      # The files for the repository have been generated into ${CARVEL_REPO_DIR}/packages
+      # They will be added to a PR from branch ${REPO_PR_BRANCH_NAME} to main
+      # - name: Prepare pull request
+      #   run: |
+          
 
   test:
     if: inputs.run-test
