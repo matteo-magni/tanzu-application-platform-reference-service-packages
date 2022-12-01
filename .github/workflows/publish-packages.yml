@@ -4,9 +4,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  PACKAGES_BASEDIR: packages
-
 on:
   push:
     branches:
@@ -25,8 +22,6 @@ jobs:
 
   list-packages:
     uses: ./.github/workflows/reusable-list-packages.yml
-    with:
-      basedir: ${{ env.PACKAGES_BASEDIR }}
 
   bump-version:
     needs:
@@ -47,7 +42,6 @@ jobs:
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
       run-test: ${{ github.event_name == 'pull_request' }}
-      packages_basedir: ${{ env.PACKAGES_BASEDIR }}
 
   carvel-publish:
     needs:
@@ -62,4 +56,3 @@ jobs:
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
       run-test: ${{ github.event_name == 'pull_request' }}
-      packages_basedir: ${{ env.PACKAGES_BASEDIR }}
