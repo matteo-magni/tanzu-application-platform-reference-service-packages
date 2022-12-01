@@ -1,3 +1,9 @@
 # Except this file
 !.gitignore
+
 /site/
+**/.src/
+**/.package/
+package-resources.yml
+package-build.yml
+**/carvel-artifacts/
