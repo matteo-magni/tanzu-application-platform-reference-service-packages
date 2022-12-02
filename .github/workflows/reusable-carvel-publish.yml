@@ -45,6 +45,19 @@ on:
       package_registry:
         value: ${{ jobs.publish.outputs.package_registry }}
 
+env:
+  PACKAGE_VERSION: ${{ inputs.package_version }}
+  PACKAGE_REGISTRY: ghcr.io
+  PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/carvel/${{ inputs.package_name }}
+  PACKAGE_PROVIDER: ${{ inputs.package_provider }}
+  PACKAGE_NAME: ${{ inputs.package_name }}
+  PACKAGES_BASEDIR: ${{ inputs.packages_basedir }}
+  PACKAGE_PACKAGING: carvel
+
+  PACKAGE_BUILD_VALUES: ${{ inputs.package_build_values }}
+  CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
+  REPO_PR_BRANCH_NAME: carvel-repo
+
 jobs:
 
   publish:
@@ -53,19 +66,10 @@ jobs:
     outputs:
       package_repository: ${{ env.PACKAGE_REPOSITORY }}
       package_registry: ${{ env.PACKAGE_REGISTRY }}
+      package_metadata_name: ${{ steps.info.outputs.package_metadata_name }}
 
     env:
-      PACKAGE_VERSION: ${{ inputs.package_version }}
-      PACKAGE_REGISTRY: ghcr.io
-      PACKAGE_REPOSITORY: ${{ github.repository }}/${{ inputs.package_provider }}/carvel/${{ inputs.package_name }}
-      PACKAGE_PROVIDER: ${{ inputs.package_provider }}
-      PACKAGE_NAME: ${{ inputs.package_name }}
-      PACKAGES_BASEDIR: ${{ inputs.packages_basedir }}
-      PACKAGE_PACKAGING: carvel
-
-      PACKAGE_BUILD_VALUES: ${{ inputs.package_build_values }}
-      CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
-      REPO_PR_BRANCH_NAME: carvel-repo
+      PACKAGE_DIR: ${{ env.PACKAGES_BASEDIR }}/${{ env.PACKAGE_PROVIDER }}/${{ env.PACKAGE_PACKAGING }}/${{ env.PACKAGE_NAME }}
 
     steps:
 
@@ -87,37 +91,31 @@ jobs:
           IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
           IMGPKG_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Get FQDN of package
-      #   id: package_fqdn
-      #   run: |
-      #     echo "fqdn=$(yq e '.metadata.name' packages/${{ matrix.package }}/package-metadata.yml)" >> $GITHUB_OUTPUT
+      - name: Get package info
+        id: info
+        run: |
+          echo "package_metadata_name=$(yq e '.metadata.name' ${PACKAGE_DIR}/package-metadata.yml)" >> $GITHUB_OUTPUT
 
-      # - name: Rename package manifest file
-      #   run: |
-      #     cd packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}
-      #     mv ${{ needs.pre-publish.outputs.version }}.yml package.yml
-
-      # - name: Release
-      #   uses: softprops/action-gh-release@v1
+      # - name: Cache repository artifacts
+      #   id: repo
+      #   uses: actions/cache@v3
       #   with:
-      #     tag_name: ${{ needs.pre-publish.outputs.version }}
-      #     fail_on_unmatched_files: true
-      #     files: |
-      #       packages-repo/packages/${{ steps.package_fqdn.outputs.fqdn }}/*.yml
+      #     path: ${{ env.CARVEL_REPO_DIR }}/packages/${{ steps.info.outputs.package_metadata_name }}
+      #     key: ${{ steps.info.outputs.package_metadata_name }}-${{ github.sha }}
 
       # The files for the repository have been generated into ${CARVEL_REPO_DIR}/packages
       # They will be added to a PR from branch ${REPO_PR_BRANCH_NAME} to main
       - name: Prepare pull request
         run: |
-          git checkout ${REPO_PR_BRANCH_NAME} || git switch --orphan ${REPO_PR_BRANCH_NAME}
+          git checkout ${REPO_PR_BRANCH_NAME} || git checkout -b ${REPO_PR_BRANCH_NAME}
           git add ${CARVEL_REPO_DIR}
           git commit -m "add package ${PACKAGE_PROVIDER}/${PACKAGE_PACKAGING}/${PACKAGE_NAME} version ${PACKAGE_VERSION}"
           git push -u origin ${REPO_PR_BRANCH_NAME}
 
           # search for existing PR
           PR_NUMBER=$(gh pr list --base main --head $(git branch --show-current) --json number --jq '.[].number')
-          if [ PR_NUMBER -eq "" ]; then
-            # PR has not been created yet
+          if [ -z "$PR_NUMBER" ]; then
+          # PR has not been created yet
             gh pr create --base main --title "Prepare new Carvel repository release" --body "$(git log --pretty=format:'%s' main..)"
           else
             # there is a PR already
@@ -135,3 +133,21 @@ jobs:
       package_provider: ${{ inputs.package_provider }}
       package_registry: ${{ needs.publish.outputs.package_registry }}
       package_repository: ${{ needs.publish.outputs.package_repository }}
+
+  # publish-repo:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - publish
+
+  #   steps:
+
+  #     - name: Retrieve repository artifacts
+  #       id: repo
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ${{ env.CARVEL_REPO_DIR }}/packages/${{ needs.publish.outputs.package_metadata_name }}
+  #         key: ${{ needs.publish.outputs.package_metadata_name }}-${{ github.sha }}
+
+  #     - name: Debug
+  #       run: |
+  #         tree -a ${{ env.CARVEL_REPO_DIR }}/packages/${{ needs.publish.outputs.package_metadata_name }}
