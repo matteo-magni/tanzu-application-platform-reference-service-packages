@@ -126,16 +126,16 @@ jobs:
           PACKAGES_LIST: ${{ needs.list-packages.outputs.carvel }}
           GH_TOKEN: ${{ github.token }}
 
-  # carvel-repo-publish:
-  #   if: needs.list-packages.outputs.carvel_publish == 'true'
-  #   uses: ./.github/workflows/reusable-carvel-repo-publish.yml
-  #   needs:
-  #     - bump-version
-  #     - carvel-prepare-repo
-  #   with:
-  #     git_ref: ${{ needs.carvel-prepare-repo.outputs.repo-branch-name }}
-  #     repo_version: ${{ needs.bump-version.outputs.version }}
-  #     release: true
+  carvel-repo-publish:
+    if: needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-carvel-repo-publish.yml
+    needs:
+      - bump-version
+      - carvel-prepare-repo
+    with:
+      git_ref: ${{ needs.carvel-prepare-repo.outputs.repo-branch-name }}
+      repo_version: ${{ needs.bump-version.outputs.version }}
+      release: true
 
   # carvel-test:
   #   if: needs.list-packages.outputs.carvel_publish == 'true'
