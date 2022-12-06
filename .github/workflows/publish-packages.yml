@@ -137,17 +137,17 @@ jobs:
       repo_version: ${{ needs.bump-version.outputs.version }}
       release: true
 
-  # carvel-test:
-  #   if: needs.list-packages.outputs.carvel_publish == 'true'
-  #   uses: ./.github/workflows/reusable-carvel-test.yml
-  #   needs:
-  #     - list-packages
-  #     - bump-version
-  #     - carvel-repo-publish
-  #   strategy:
-  #     matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
-  #   with:
-  #     repo_version: ${{ needs.bump-version.outputs.version }}
-  #     package_name: ${{ matrix.name }}
-  #     package_provider: ${{ matrix.provider }}
-  #     package_version: ${{ needs.bump-version.outputs.version }}
+  carvel-test:
+    if: needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-carvel-test.yml
+    needs:
+      - list-packages
+      - bump-version
+      - carvel-repo-publish
+    strategy:
+      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
+    with:
+      repo_version: ${{ needs.bump-version.outputs.version }}
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}

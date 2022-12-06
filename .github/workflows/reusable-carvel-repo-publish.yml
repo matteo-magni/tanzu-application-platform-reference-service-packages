@@ -63,9 +63,6 @@ jobs:
         id: kctrl
         run: |
           make kctrl-repo-release
-
-      # echo "registry=$CARVEL_REPO_REGISTRY" >> $GITHUB_OUTPUT
-      # echo "repository=$CARVEL_REPO_REPOSITORY" >> $GITHUB_OUTPUT
         env:
           IMGPKG_REGISTRY_HOSTNAME: ${{ env.CARVEL_REPO_REGISTRY }}
           IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
