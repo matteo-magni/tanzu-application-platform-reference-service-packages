@@ -29,9 +29,6 @@ on:
         type: string
         description: Directory path to hold the contents of the Carvel repository
         default: repository
-      run-test:
-        type: boolean
-        default: false
       kubernetes-version:
         type: string
         default: v1.24.6
@@ -115,27 +112,3 @@ jobs:
           git push -u origin ${ARTIFACTS_BRANCH_NAME}
         env:
           PACKAGE_METADATA_NAME: ${{ steps.info.outputs.package_metadata_name }}
-
-  # carvel-repo-publish:
-  #   if: inputs.run-test
-  #   uses: ./.github/workflows/reusable-carvel-repo-publish.yml
-  #   needs:
-  #     - publish
-  #   with:
-  #     ref: ${{ inputs.package_version }}
-  #     package_name: ${{ inputs.package_name }}
-  #     package_provider: ${{ inputs.package_provider }}
-  #     package_registry: ${{ needs.publish.outputs.package_registry }}
-  #     package_repository: ${{ needs.publish.outputs.package_repository }}
-
-  # test:
-  #   if: inputs.run-test
-  #   uses: ./.github/workflows/reusable-carvel-test.yml
-  #   needs:
-  #     - carvel-repo-publish
-  #   with:
-  #     package_version: ${{ inputs.package_version }}
-  #     package_name: ${{ inputs.package_name }}
-  #     package_provider: ${{ inputs.package_provider }}
-  #     package_registry: ${{ needs.publish.outputs.package_registry }}
-  #     package_repository: ${{ needs.publish.outputs.package_repository }}

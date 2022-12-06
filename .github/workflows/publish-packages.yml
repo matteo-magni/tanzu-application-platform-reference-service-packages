@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - main
+      - gha-carvel
     paths:
       - 'packages/*/*/*/**'
 
@@ -17,9 +18,6 @@ on:
       - main
     paths:
       - 'packages/*/*/*/**'
-
-env:
-  RUN_TEST: "${{ github.event_name == 'pull_request' }}"
 
 jobs:
 
@@ -64,7 +62,6 @@ jobs:
       package_version: ${{ needs.bump-version.outputs.version }}
       packages_basedir: ${{ needs.list-packages.outputs.basedir }}
       package_path: ${{ matrix.path }}
-      run-test: ${{ env.RUN_TEST == "true" }}
 
   carvel-prepare-repo:
     needs:
@@ -128,7 +125,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   carvel-repo-publish:
-    if: env.RUN_TEST == 'true' and needs.list-packages.outputs.carvel_publish == 'true'
+    if: needs.list-packages.outputs.carvel_publish == 'true'
     uses: ./.github/workflows/reusable-carvel-repo-publish.yml
     needs:
       - bump-version
@@ -139,7 +136,7 @@ jobs:
       release: true
 
   carvel-test:
-    if: env.RUN_TEST == 'true' and needs.list-packages.outputs.carvel_publish == 'true'
+    if: needs.list-packages.outputs.carvel_publish == 'true'
     uses: ./.github/workflows/reusable-carvel-test.yml
     needs:
       - list-packages
