@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      repo-branch-name: ${{ env.REPO_BRANCH_NAME }}
+      repo-branch-name: ${{ steps.git.outputs.REPO_BRANCH_NAME }}
 
     env:
       PACKAGE_VERSION: ${{ needs.bump-version.outputs.version }}
@@ -85,6 +85,7 @@ jobs:
           fetch-depth: '0'
 
       - name: Prepare git client
+        id: git
         run: |
           git config --global user.email "${{ github.event.repository.name }}@${{ github.repository_owner }}.github.io"
           git config --global user.name "GitHub Actions Workflow"
@@ -92,6 +93,7 @@ jobs:
           sleep 5 && git fetch --all
 
           echo "CURRENT_BRANCH=$(git branch --show-current)" >> $GITHUB_ENV
+          echo "REPO_BRANCH_NAME=$REPO_BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Create branch and pull request
         run: |
