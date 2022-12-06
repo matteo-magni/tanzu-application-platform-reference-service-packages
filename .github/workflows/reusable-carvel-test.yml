@@ -51,18 +51,18 @@ jobs:
           kubectl cluster-info
           kubectl get storageclass standard
 
-      # - name: Install kapp-controller
-      #   run: |
-      #     KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp-controller-version }}/release.yml"
-      #     if [[ "${{ inputs.kapp-controller-version }}" == "latest" ]]; then
-      #       KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml"
-      #     fi
-      #     kubectl apply -f $KAPP_MANIFEST
+      - name: Install kapp-controller
+        run: |
+          KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp-controller-version }}/release.yml"
+          if [[ "${{ inputs.kapp-controller-version }}" == "latest" ]]; then
+            KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml"
+          fi
+          kubectl apply -f $KAPP_MANIFEST
 
-      # - name: Install Carvel repository
-      #   run: |
-      #     kubectl apply -n $KAPP_GLOBAL_NAMESPACE -f https://github.com/${{ github.repository }}/releases/download/${{ inputs.repo_version }}/package-repository.yml
+      - name: Install Carvel repository
+        run: |
+          kubectl apply -n $KAPP_GLOBAL_NAMESPACE -f https://github.com/${{ github.repository }}/releases/download/${{ inputs.repo_version }}/package-repository.yml
 
-      # - name: List available packages
-      #   run: |
-      #     kubectl get packages.data.packaging.carvel.dev
+      - name: List available packages
+        run: |
+          kubectl get packages.data.packaging.carvel.dev
