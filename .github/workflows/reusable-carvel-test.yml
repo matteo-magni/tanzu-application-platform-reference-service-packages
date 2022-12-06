@@ -36,24 +36,20 @@ jobs:
 
     steps:
 
-      - name: debug
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.4.0
+        with:
+          verbosity: 5
+          version: ${{ inputs.kind-version }}
+          kubectl_version: ${{ inputs.kubernetes-version }}
+          node_image: kindest/node:${{ inputs.kubernetes-version }}
+
+      - name: Verify Cluster
         run: |
-          env | sort
-
-      # - name: Create k8s Kind Cluster
-      #   uses: helm/kind-action@v1.4.0
-      #   with:
-      #     verbosity: 5
-      #     version: ${{ inputs.kind-version }}
-      #     kubectl_version: ${{ inputs.kubernetes-version }}
-      #     node_image: kindest/node:${{ inputs.kubernetes-version }}
-
-      # - name: Verify Cluster
-      #   run: |
-      #     kubectl version
-      #     which kubectl
-      #     kubectl cluster-info
-      #     kubectl get storageclass standard
+          kubectl version
+          which kubectl
+          kubectl cluster-info
+          kubectl get storageclass standard
 
       # - name: Install kapp-controller
       #   run: |
