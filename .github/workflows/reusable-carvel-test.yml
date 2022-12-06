@@ -60,16 +60,35 @@ jobs:
           kubectl apply -f https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/latest/download/release.yml
 
           kubectl apply -f ${KAPP_MANIFEST}
-          kubectl wait --for=condition=Available=True -n kapp-controller deploy kapp-controller
-          kubectl wait --for=condition=Available=True apiservices.apiregistration.k8s.io v1alpha1.data.packaging.carvel.dev
+          time kubectl wait --for=condition=Available=True -n kapp-controller deploy kapp-controller
+          time kubectl wait --for=condition=Available=True apiservices.apiregistration.k8s.io v1alpha1.data.packaging.carvel.dev
 
       - name: Install Carvel repository
         run: |
           REPO_MANIFEST="https://github.com/${{ github.repository }}/releases/download/${{ inputs.repo_version }}/package-repository.yml"
           kubectl apply -n ${KAPP_GLOBAL_NAMESPACE} -f ${REPO_MANIFEST}
           REPO_NAME=$(curl -sSfL ${REPO_MANIFEST} | yq '.metadata.name')
-          kubectl wait --for=condition=ReconcileSucceeded=True packagerepositories.packaging.carvel.dev -n ${KAPP_GLOBAL_NAMESPACE} ${REPO_NAME}
+          time kubectl wait --for=condition=ReconcileSucceeded=True packagerepositories.packaging.carvel.dev -n ${KAPP_GLOBAL_NAMESPACE} ${REPO_NAME}
 
       - name: List available packages
         run: |
           kubectl get packages.data.packaging.carvel.dev
+
+      - name: Create Azure Config Secret
+        if: inputs.package_provider == 'azure'
+        run: |
+          kubectl create namespace ${CROSSPLANE_NAMESPACE}
+          kubectl create secret generic azure-secret -n ${CROSSPLANE_NAMESPACE} --from-literal=creds='${{ secrets.AZURE_CONFIG }}'
+
+      - name: Test Crossplane package
+        run: |
+          [ -x ${SCRIPT} ] && ${SCRIPT} || true
+        env:
+          SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_name }}.sh
+
+      - name: Cleanup Crossplane package
+        if: always()
+        run: |
+          [ -x ${SCRIPT} ] && ${SCRIPT} || true
+        env:
+          SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_name }}/cleanup.sh
