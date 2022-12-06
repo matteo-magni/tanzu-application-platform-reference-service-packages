@@ -26,9 +26,9 @@ on:
 
     outputs:
       registry:
-        value: ${{ env.CARVEL_REPO_REGISTRY }}
+        value: ${{ jobs.publish.outputs.registry }}
       repository:
-        value: ${{ env.CARVEL_REPO_REPOSITORY }}
+        value: ${{ jobs.publish.outputs.repository }}
 
 env:
   CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
@@ -41,6 +41,10 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+
+    outputs:
+      registry: ${{ env.CARVEL_REPO_REGISTRY }}
+      repository: ${{ env.CARVEL_REPO_REPOSITORY }}
 
     steps:
 
