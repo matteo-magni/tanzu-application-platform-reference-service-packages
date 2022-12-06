@@ -1,0 +1,60 @@
+name: Reusable workflow for publishing Carvel packages repository
+
+on:
+
+  workflow_call:
+
+    inputs:
+      basedir:
+        type: string
+        default: repository
+      release:
+        type: boolean
+        default: false
+      name:
+        type: string
+        default: carvel-reference-packages
+      version:
+        type: string
+      kctrl-version:
+        type: string
+        default: v0.43.2
+
+env:
+  CARVEL_REPO_DIR: ${{ inputs.basedir }}
+  CARVEL_REPO_NAME: ${{ inputs.name }}
+  CARVEL_REPO_REGISTRY: ghcr.io
+  CARVEL_REPO_REPOSITORY: ${{ github.repository }}/${{ inputs.name }}
+  CARVEL_REPO_VERSION: ${{ inputs.version }}
+
+jobs:
+
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Carvel tools
+        uses: vmware-tanzu/carvel-setup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          kctrl: ${{ inputs.kctrl-version }}
+
+      - name: Kctrl Release
+        run: make kctrl-repo-release
+        env:
+          IMGPKG_REGISTRY_HOSTNAME: ${{ env.CARVEL_REPO_REGISTRY }}
+          IMGPKG_REGISTRY_USERNAME: ${{ github.actor }}
+          IMGPKG_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        if: inputs.release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.CARVEL_REPO_VERSION }}
+          fail_on_unmatched_files: true
+          files: |
+            repository/package-repository.yml

@@ -97,7 +97,6 @@ jobs:
         run: |
           package_metadata_name=$(yq e '.metadata.name' ${PACKAGE_DIR}/package-metadata.yml)
           echo "package_metadata_name=${package_metadata_name}" >> $GITHUB_OUTPUT
-          echo "bundle_sha=$(yq ea 'select(.kind=="Package").spec.template.spec.fetch[0].imgpkgBundle.image|split("@")|.[1]|split(":")|.[1]' ${CARVEL_REPO_DIR}/packages/${package_metadata_name})" >> $GITHUB_OUTPUT
 
       # The files for the repository have been generated into ${CARVEL_REPO_DIR}/packages
       # They will be added to a dedicated branch
