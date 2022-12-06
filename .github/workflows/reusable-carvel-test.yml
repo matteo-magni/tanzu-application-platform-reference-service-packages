@@ -5,6 +5,9 @@ on:
   workflow_call:
 
     inputs:
+      repo_version:
+        type: string
+        required: true
       package_version:
         type: string
         required: true
@@ -14,33 +17,25 @@ on:
       package_provider:
         type: string
         required: true
-      package_registry:
-        type: string
-        required: true
-      package_repository:
-        type: string
-        required: true
+
       kubernetes-version:
         type: string
         default: v1.24.6
       kind-version:
         type: string
         default: v0.16.0
+      kapp-controller-version:
+        type: string
+        default: v0.43.2
 
 jobs:
 
   test:
     runs-on: ubuntu-latest
     env:
-      CROSSPLANE_NAMESPACE: upbound-system
-      CONFIG_VERSION: ${{ inputs.package_version }}
-      CONFIG_IMAGE: ${{ inputs.package_registry }}/${{ inputs.package_repository }}
+      KAPP_GLOBAL_NAMESPACE: kapp-controller-packaging-global
 
     steps:
-
-      - name: Dump info
-        run: |
-          env | sort
 
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0
@@ -57,21 +52,37 @@ jobs:
           kubectl cluster-info
           kubectl get storageclass standard
 
-      - name: Create Azure Config Secret
-        if: inputs.package_provider == 'azure'
-        run: |
-          kubectl create namespace ${CROSSPLANE_NAMESPACE}
-          kubectl create secret generic azure-secret -n ${CROSSPLANE_NAMESPACE} --from-literal=creds='${{ secrets.AZURE_CONFIG }}'
+      # - name: Create Azure Config Secret
+      #   if: inputs.package_provider == 'azure'
+      #   run: |
+      #     kubectl create namespace ${CROSSPLANE_NAMESPACE}
+      #     kubectl create secret generic azure-secret -n ${CROSSPLANE_NAMESPACE} --from-literal=creds='${{ secrets.AZURE_CONFIG }}'
 
-      - name: Test Carvel Package
+      - name: Install kapp-controller
         run: |
-          [ -x ${SCRIPT} ] && ${SCRIPT} || true
-        env:
-          SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_name }}.sh
+          KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp-controller-version }}/release.yml"
+          if [[ "${{ inputs.kapp-controller-version }}" == "latest" ]]; then
+            KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml"
+          fi
+          kubectl apply -f $KAPP_MANIFEST
 
-      - name: Cleanup Carvel Package
-        if: always()
+      - name: Install Carvel repository
         run: |
-          [ -x ${SCRIPT} ] && ${SCRIPT} || true
-        env:
-          SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_name }}/cleanup.sh
+          kubectl apply -n $KAPP_GLOBAL_NAMESPACE -f https://github.com/${{ github.repository }}/releases/download/${{ inputs.repo_version }}/package-repository.yml
+
+      - name: List available packages
+        run: |
+          kubectl get packages.data.packaging.carvel.dev
+
+      # - name: Test Carvel Package
+      #   run: |
+      #     [ -x ${SCRIPT} ] && ${SCRIPT} || true
+      #   env:
+      #     SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_name }}.sh
+
+      # - name: Cleanup Carvel Package
+      #   if: always()
+      #   run: |
+      #     [ -x ${SCRIPT} ] && ${SCRIPT} || true
+      #   env:
+      #     SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_name }}/cleanup.sh

@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main
-      - gha-carvel
     paths:
       - 'packages/*/*/*/**'
 
@@ -18,6 +17,9 @@ on:
       - main
     paths:
       - 'packages/*/*/*/**'
+
+env:
+  RUN_TEST: "${{ github.event_name == 'pull_request' }}"
 
 jobs:
 
@@ -62,7 +64,7 @@ jobs:
       package_version: ${{ needs.bump-version.outputs.version }}
       packages_basedir: ${{ needs.list-packages.outputs.basedir }}
       package_path: ${{ matrix.path }}
-      run-test: ${{ github.event_name == 'pull_request' }}
+      run-test: ${{ env.RUN_TEST == "true" }}
 
   carvel-prepare-repo:
     needs:
@@ -70,6 +72,9 @@ jobs:
       - list-packages
       - carvel-publish
     runs-on: ubuntu-latest
+
+    outputs:
+      repo-branch-name: ${{ env.REPO_BRANCH_NAME }}
 
     env:
       PACKAGE_VERSION: ${{ needs.bump-version.outputs.version }}
@@ -121,3 +126,29 @@ jobs:
         env:
           PACKAGES_LIST: ${{ needs.list-packages.outputs.carvel }}
           GH_TOKEN: ${{ github.token }}
+
+  carvel-repo-publish:
+    if: env.RUN_TEST == 'true' and needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-carvel-repo-publish.yml
+    needs:
+      - bump-version
+      - carvel-prepare-repo
+    with:
+      git_ref: ${{ needs.carvel-prepare-repo.outputs.repo-branch-name }}
+      repo_version: ${{ needs.bump-version.outputs.version }}
+      release: true
+
+  carvel-test:
+    if: env.RUN_TEST == 'true' and needs.list-packages.outputs.carvel_publish == 'true'
+    uses: ./.github/workflows/reusable-carvel-test.yml
+    needs:
+      - list-packages
+      - bump-version
+      - carvel-repo-publish
+    strategy:
+      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
+    with:
+      repo_version: ${{ needs.bump-version.outputs.version }}
+      package_name: ${{ matrix.name }}
+      package_provider: ${{ matrix.provider }}
+      package_version: ${{ needs.bump-version.outputs.version }}

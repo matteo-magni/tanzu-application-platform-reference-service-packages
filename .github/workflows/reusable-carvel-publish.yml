@@ -116,14 +116,26 @@ jobs:
         env:
           PACKAGE_METADATA_NAME: ${{ steps.info.outputs.package_metadata_name }}
 
-  test:
-    if: inputs.run-test
-    uses: ./.github/workflows/reusable-carvel-test.yml
-    needs:
-      - publish
-    with:
-      package_version: ${{ inputs.package_version }}
-      package_name: ${{ inputs.package_name }}
-      package_provider: ${{ inputs.package_provider }}
-      package_registry: ${{ needs.publish.outputs.package_registry }}
-      package_repository: ${{ needs.publish.outputs.package_repository }}
+  # carvel-repo-publish:
+  #   if: inputs.run-test
+  #   uses: ./.github/workflows/reusable-carvel-repo-publish.yml
+  #   needs:
+  #     - publish
+  #   with:
+  #     ref: ${{ inputs.package_version }}
+  #     package_name: ${{ inputs.package_name }}
+  #     package_provider: ${{ inputs.package_provider }}
+  #     package_registry: ${{ needs.publish.outputs.package_registry }}
+  #     package_repository: ${{ needs.publish.outputs.package_repository }}
+
+  # test:
+  #   if: inputs.run-test
+  #   uses: ./.github/workflows/reusable-carvel-test.yml
+  #   needs:
+  #     - carvel-repo-publish
+  #   with:
+  #     package_version: ${{ inputs.package_version }}
+  #     package_name: ${{ inputs.package_name }}
+  #     package_provider: ${{ inputs.package_provider }}
+  #     package_registry: ${{ needs.publish.outputs.package_registry }}
+  #     package_repository: ${{ needs.publish.outputs.package_repository }}

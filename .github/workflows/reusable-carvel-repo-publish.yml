@@ -5,27 +5,37 @@ on:
   workflow_call:
 
     inputs:
-      basedir:
+      repo_dir:
         type: string
         default: repository
       release:
         type: boolean
         default: false
-      name:
+      repo_name:
         type: string
         default: carvel-reference-packages
-      version:
+      repo_version:
         type: string
+      git_ref:
+        type: string
+        default: ${{ github.ref }}
+        description: Git ref to checkout (defaults to github.ref)
       kctrl-version:
         type: string
         default: v0.43.2
 
+    outputs:
+      registry:
+        value: ${{ env.CARVEL_REPO_REGISTRY }}
+      repository:
+        value: ${{ env.CARVEL_REPO_REPOSITORY }}
+
 env:
-  CARVEL_REPO_DIR: ${{ inputs.basedir }}
-  CARVEL_REPO_NAME: ${{ inputs.name }}
+  CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
+  CARVEL_REPO_NAME: ${{ inputs.repo_name }}
   CARVEL_REPO_REGISTRY: ghcr.io
-  CARVEL_REPO_REPOSITORY: ${{ github.repository }}/${{ inputs.name }}
-  CARVEL_REPO_VERSION: ${{ inputs.version }}
+  CARVEL_REPO_REPOSITORY: ${{ github.repository }}/${{ inputs.repo_name }}
+  CARVEL_REPO_VERSION: ${{ inputs.repo_version }}
 
 jobs:
 
@@ -36,6 +46,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.git_ref }}
 
       - name: Install Carvel tools
         uses: vmware-tanzu/carvel-setup-action@v1
