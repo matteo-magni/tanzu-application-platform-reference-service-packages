@@ -1,7 +1,7 @@
 apiVersion: data.packaging.carvel.dev/v1alpha1
 kind: PackageMetadata
 metadata:
-  name: postgresql.azure.ref.services.apps.tanzu.vmware.com
+  name: psql.azure.ref.services.apps.tanzu.vmware.com
 spec:
   categories:
   - services

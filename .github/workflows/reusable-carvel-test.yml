@@ -26,6 +26,9 @@ on:
       kapp-controller-version:
         type: string
         default: v0.43.2
+      secretgen-controller-version:
+        type: string
+        default: v0.12.0
 
 jobs:
 
@@ -53,15 +56,25 @@ jobs:
 
       - name: Install kapp-controller
         run: |
-          KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp-controller-version }}/release.yml"
+          MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp-controller-version }}/release.yml"
           if [[ "${{ inputs.kapp-controller-version }}" == "latest" ]]; then
-            KAPP_MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml"
+            MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml"
           fi
-          kubectl apply -f https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/latest/download/release.yml
 
-          kubectl apply -f ${KAPP_MANIFEST}
+          kubectl apply -f ${MANIFEST}
           time kubectl wait --for=condition=Available=True -n kapp-controller deploy kapp-controller
           time kubectl wait --for=condition=Available=True apiservices.apiregistration.k8s.io v1alpha1.data.packaging.carvel.dev
+
+      - name: Install secretgen-controller
+        run: |
+          MANIFEST="https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/download/${{ inputs.secretgen-controller-version }}/release.yml"
+          if [[ "${{ inputs.secretgen-controller-version }}" == "latest" ]]; then
+            MANIFEST="https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/latest/download/release.yml"
+          fi
+
+          kubectl apply -f ${MANIFEST}
+          time kubectl wait --for=condition=Available=True -n secretgen-controller deploy secretgen-controller
+          time kubectl wait --for=condition=Available=True apiservices.apiregistration.k8s.io v1alpha1.secretgen.carvel.dev
 
       - name: Install Carvel repository
         run: |
@@ -73,3 +86,16 @@ jobs:
       - name: List available packages
         run: |
           kubectl get packages.data.packaging.carvel.dev
+
+      - name: Test Carvel package
+        run: |
+          [ -x ${SCRIPT} ] && ${SCRIPT} || true
+        env:
+          SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
+
+      - name: Cleanup Carvel package
+        if: always()
+        run: |
+          [ -x ${SCRIPT} ] && ${SCRIPT} || true
+        env:
+          SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}/cleanup.sh
