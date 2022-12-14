@@ -151,3 +151,4 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
+    secrets: inherit
