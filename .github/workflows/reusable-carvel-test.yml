@@ -99,9 +99,10 @@ jobs:
         env:
           AZURE_CONFIG: ${{ secrets.AZURE_CONFIG }}
         run: |
+          # 
           for k in $(jq -r 'keys[]' <<<"$AZURE_CONFIG"); do
             K=$(echo azure_$k | sed -r 's/([a-z0-9])([A-Z])/\1_\L\2/g' | tr '[:lower:]' '[:upper:]')
-            echo $K=$(jq -r '.'$k <<<"$AZURE_CONFIG")
+            echo $K=$(jq -r '.'$k <<<"$AZURE_CONFIG") >> $GITHUB_ENV
           done
 
       - name: Test Carvel package
