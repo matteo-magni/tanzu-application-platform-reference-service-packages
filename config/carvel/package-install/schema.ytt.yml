@@ -1,0 +1,13 @@
+#@data/values-schema
+---
+#@schema/desc "The package full name as from .spec.refName"
+refName: ""
+
+#@schema/desc "The namespace where the package must be installed"
+namespace: services
+
+#@schema/desc "The package version to install"
+version: ""
+
+#@schema/desc "The values required for configuring the package"
+values: ""
