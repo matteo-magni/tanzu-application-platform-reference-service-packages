@@ -75,7 +75,7 @@ jobs:
 
     env:
       PACKAGE_VERSION: ${{ needs.bump-version.outputs.version }}
-      REPO_BRANCH_NAME: carvel-repo-${{ github.sha }}
+      REPO_BRANCH_NAME: carvel-repo-${{ needs.bump-version.outputs.version }}
 
     steps:
       
@@ -151,3 +151,4 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
+    secrets: inherit
