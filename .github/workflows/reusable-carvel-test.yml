@@ -34,8 +34,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    env:
-      KAPP_GLOBAL_NAMESPACE: kapp-controller-packaging-global
 
     steps:
 
@@ -65,6 +63,9 @@ jobs:
           time kubectl wait --for=condition=Available=True -n kapp-controller deploy kapp-controller
           time kubectl wait --for=condition=Available=True apiservices.apiregistration.k8s.io v1alpha1.data.packaging.carvel.dev
 
+          # determine the kapp-controller global namespace
+          echo KAPP_GLOBAL_NAMESPACE=$(kubectl -n kapp-controller get deployment kapp-controller -o json | jq -r '.spec.template.spec.containers[]|select(.name=="kapp-controller").args[]|select(.|startswith("-packaging-global-namespace"))|split("=")[1]') >> $GITHUB_ENV
+
       - name: Install secretgen-controller
         run: |
           MANIFEST="https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/download/${{ inputs.secretgen-controller-version }}/release.yml"
@@ -86,6 +87,22 @@ jobs:
       - name: List available packages
         run: |
           kubectl get packages.data.packaging.carvel.dev
+
+      - name: Mask secret
+        if: inputs.package_provider == 'azure'
+        uses: matteo-magni/secret-mask-action@main
+        with:
+          secret: ${{ secrets.AZURE_CONFIG }}
+
+      - name: Set Azure secret
+        if: inputs.package_provider == 'azure'
+        env:
+          AZURE_CONFIG: ${{ secrets.AZURE_CONFIG }}
+        run: |
+          for k in $(jq -r 'keys[]' <<<"$AZURE_CONFIG"); do
+            K=$(echo azure_$k | sed -r 's/([a-z0-9])([A-Z])/\1_\L\2/g' | tr '[:lower:]' '[:upper:]')
+            echo $K=$(jq -r '.'$k <<<"$AZURE_CONFIG")
+          done
 
       - name: Test Carvel package
         run: |

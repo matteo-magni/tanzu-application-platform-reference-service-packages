@@ -1,0 +1,36 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:assert", "assert")
+
+#@ mandatory_fields = [ "refName", "namespace", "version" ]
+#@ missing_fields = []
+#@ for field in mandatory_fields:
+#@   if len(data.values[field]) == 0:
+#@     missing_fields.append(field)
+#@   end
+#@ end
+#@ if len(missing_fields) > 0:
+#@   assert.fail("Missing values for mandatory fields '{}'".format(missing_fields))
+#@ end
+---
+apiVersion: packaging.carvel.dev/v1alpha1
+kind: PackageInstall
+metadata:
+  name: #@ data.values.refName
+  namespace: #@ data.values.namespace
+spec:
+  serviceAccountName: #@ data.values.refName + "-install"
+  packageRef:
+    refName: #@ data.values.refName
+    versionSelection:
+      constraints: #@ data.values.version
+  values:
+  - secretRef:
+      name: #@ data.values.refName + "-values"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name:  #@ data.values.refName + "-values"
+  namespace: #@ data.values.namespace
+stringData:
+  values.yml: #@ data.values.values
