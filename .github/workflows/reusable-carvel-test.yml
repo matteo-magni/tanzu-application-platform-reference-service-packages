@@ -111,17 +111,18 @@ jobs:
             echo $K=$(jq -r '.'$k <<<"$AZURE_CONFIG") >> $GITHUB_ENV
           done
 
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Test Carvel package
         run: |
-          ls -l ${SCRIPT}
-          [ -x ${SCRIPT} ] && ${SCRIPT} || echo "No executable script found: ${SCRIPT}"
+          [ -x ${SCRIPT} ] && ${SCRIPT} || true
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
 
       - name: Cleanup Carvel package
         if: always()
         run: |
-          ls -l ${SCRIPT}
-          [ -x ${SCRIPT} ] && ${SCRIPT} || echo "No executable cleanup script found: ${SCRIPT}"
+          [ -x ${SCRIPT} ] && ${SCRIPT} || true
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}/cleanup.sh
