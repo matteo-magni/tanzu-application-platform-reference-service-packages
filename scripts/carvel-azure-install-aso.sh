@@ -28,3 +28,5 @@ stringData:
 EOF
 
 kubectl -n ${ASO_NAMESPACE} wait --for=condition=Available deployments.apps azureserviceoperator-controller-manager
+
+kubectl -n ${ASO_NAMESPACE} get secrets aso-controller-settings
