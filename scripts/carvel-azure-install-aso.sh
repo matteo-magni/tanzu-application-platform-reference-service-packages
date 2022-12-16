@@ -13,7 +13,6 @@ kubectl wait --for=condition=Available apiservices.apiregistration.k8s.io v1.cer
 kubectl wait --for=condition=Available apiservices.apiregistration.k8s.io v1.acme.cert-manager.io
 
 # install ASO
-kubectl apply --server-side=true -f ${ASO_MANIFEST}
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
@@ -27,6 +26,5 @@ stringData:
   AZURE_CLIENT_SECRET: "$AZURE_CLIENT_SECRET"
 EOF
 
+kubectl apply --server-side=true -f ${ASO_MANIFEST}
 kubectl -n ${ASO_NAMESPACE} wait --for=condition=Available deployments.apps azureserviceoperator-controller-manager
-
-kubectl -n ${ASO_NAMESPACE} get secrets aso-controller-settings -o yaml | yq .data.AZURE_CLIENT_ID | base64 -d

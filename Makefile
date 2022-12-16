@@ -82,7 +82,7 @@ CARVEL_REPO_DIR ?= repository
 
 kctrl-release-prepare:
 	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-resources -f ${PACKAGE_DIR}/package-metadata.yml -v version=${PACKAGE_VERSION} > ${PACKAGE_DIR}/package-resources.yml
-	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-build -v registry=${PACKAGE_REGISTRY} -v repository=${PACKAGE_REPOSITORY} -v buildValues=$(shell [ -e ${PACKAGE_DIR}/${PACKAGE_BUILD_VALUES} ] && echo ${PACKAGE_BUILD_VALUES} ) > ${PACKAGE_DIR}/package-build.yml
+	ytt --data-values-file ${PACKAGE_DIR}/package-metadata.yml -f config/carvel/package-build -v registry=${PACKAGE_REGISTRY} -v repository=${PACKAGE_REPOSITORY} > ${PACKAGE_DIR}/package-build.yml
 
 kctrl-release: kctrl-release-prepare
 	kctrl package release --chdir "${PACKAGE_DIR}" --version="${PACKAGE_VERSION}" --tag="${PACKAGE_VERSION}" --repo-output="${PWD}/${CARVEL_REPO_DIR}" -y

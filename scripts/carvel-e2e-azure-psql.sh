@@ -7,7 +7,6 @@ pushd $(dirname $0)
 
 # install package
 
-
 # create claim
 
 # run test

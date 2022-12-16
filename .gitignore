@@ -4,7 +4,4 @@
 /site/
 **/.src/
 **/.package/
-**/carvel-artifacts/
-package-resources.yml
-package-build.yml
 pkgrepo-build.yml
