@@ -116,13 +116,13 @@ jobs:
 
       - name: Test Carvel package
         run: |
-          [ -x ${SCRIPT} ] && ${SCRIPT} || true
+          [ -x ${SCRIPT} ] && ${SCRIPT}
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
 
       - name: Cleanup Carvel package
         if: always()
         run: |
-          [ -x ${SCRIPT} ] && ${SCRIPT} || true
+          [ -x ${SCRIPT} ] && ${SCRIPT}
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}/cleanup.sh

@@ -11,10 +11,6 @@
 #@   assert.fail('.metadata.name must not be empty')
 #@ end
 
-#@ ytt_paths = ["config"]
-#@ if "buildValues" in data.values and data.values.buildValues != "":
-#@   ytt_paths.append(data.values.buildValues)
-#@ end
 ---
 apiVersion: kctrl.carvel.dev/v1alpha1
 kind: PackageBuild
@@ -32,7 +28,8 @@ spec:
           - kapp: {}
           template:
           - ytt:
-              paths: #@ ytt_paths
+              paths:
+              - config
           - kbld: {}
       export:
       - imgpkgBundle:

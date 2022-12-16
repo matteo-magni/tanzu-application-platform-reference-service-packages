@@ -30,24 +30,21 @@
 #@     missing_fields.append(field)
 #@   end
 #@ end
-
-#@ databaseName = "name" in data.values.database and data.values.database.name or data.values.name
-
 #@ if data.values.resource_group.name == "":
 #@   missing_fields.append("resource_group.name")
 #@ end
-#@ if len(missing_fields) > 0:
-#@   assert.fail("Missing values for mandatory fields '{}'".format(missing_fields))
-#@ end
 
+#@ databaseName = "name" in data.values.database and data.values.database.name or data.values.name
+
+#!@ if len(missing_fields) > 0:
+#!@   assert.fail("Missing values for mandatory fields '{}'".format(missing_fields))
+#!@ end
 #@ if not regexp.match("^Standard_", data.values.server.instance_type):
 #@   assert.fail("'instance_type' must follow the convention Standard_(VMname) (was: '{}')".format(data.values.server.instance_type))
 #@ end
-
 #@ if data.values.server.instance_tier not in ["Burstable", "GeneralPurpose", "Memory Optimized"]:
 #@   assert.fail("'instance_tier' must be in [\"Burstable\", \"GeneralPurpose\", \"Memory Optimized\"] (was: '{}')".format(data.values.server.instance_tier))
 #@ end
-
 #@ if data.values.server.instance_storage_size_gb < 32 or data.values.server.instance_storage_size_gb > 16384:
 #@   assert.fail("'instance_storage_size_gb' must be within 32 and 16384 (was: {})".format(data.values.server.instance_storage_size_gb))
 #@ end

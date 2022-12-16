@@ -1,36 +1,74 @@
 #@ load("@ytt:data", "data")
-#@ load("@ytt:assert", "assert")
+#@ load("@ytt:overlay", "overlay")
 
-#@ mandatory_fields = [ "refName", "namespace", "version" ]
-#@ missing_fields = []
-#@ for field in mandatory_fields:
-#@   if len(data.values[field]) == 0:
-#@     missing_fields.append(field)
-#@   end
-#@ end
-#@ if len(missing_fields) > 0:
-#@   assert.fail("Missing values for mandatory fields '{}'".format(missing_fields))
-#@ end
+#@ secretName = data.values.refName + "-values"
+#@ serviceAccountName = data.values.refName + "-install"
 ---
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageInstall
 metadata:
   name: #@ data.values.refName
-  namespace: #@ data.values.namespace
 spec:
-  serviceAccountName: #@ data.values.refName + "-install"
+  serviceAccountName: #@ serviceAccountName
   packageRef:
     refName: #@ data.values.refName
     versionSelection:
       constraints: #@ data.values.version
   values:
   - secretRef:
-      name: #@ data.values.refName + "-values"
+      name: #@ secretName
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name:  #@ data.values.refName + "-values"
-  namespace: #@ data.values.namespace
+  name: #@ secretName
 stringData:
   values.yml: #@ data.values.values
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: #@ serviceAccountName
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: #@ serviceAccountName
+rules:
+- apiGroups: ["dbforpostgresql.azure.com"]
+  resources: ["flexibleservers","flexibleserversdatabases","flexibleserversfirewallrules"]
+  verbs:     ["*"]
+- apiGroups: ["resources.azure.com"]
+  resources: ["resourcegroups"]
+  verbs:     ["*"]  
+- apiGroups: ["secretgen.carvel.dev", "secretgen.k14s.io"]
+  resources: ["secrettemplates","passwords"]
+  verbs:     ["*"]
+- apiGroups: [""]
+  resources: ["serviceaccounts","configmaps"]
+  verbs:     ["*"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs:     ["get", "list"]  
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles","rolebindings"]
+  verbs:     ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: #@ serviceAccountName + "-binding"
+subjects:
+- kind: ServiceAccount
+  name: #@ serviceAccountName
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: #@ serviceAccountName
+
+
+#@overlay/match by=overlay.all, expects="1+"
+---
+metadata:
+  #@overlay/match missing_ok=True
+  namespace: #@ data.values.namespace
