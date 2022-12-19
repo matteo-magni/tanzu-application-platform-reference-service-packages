@@ -1,7 +1,7 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
 
-#@ installName = data.values.installName or (data.values.refName + "-install")
+#@ installName = data.values.installName or data.values.refName
 #@ secretName = data.values.refName + "-values"
 #@ serviceAccountName = data.values.refName + "-install"
 ---

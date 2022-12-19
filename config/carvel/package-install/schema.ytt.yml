@@ -15,6 +15,5 @@ namespace: services
 #@schema/validation min_len=1
 version: ""
 
-#@schema/desc "The values required for configuring the package"
-#@schema/validation min_len=1
+#@schema/desc "The values needed for configuring the package"
 values: ""
