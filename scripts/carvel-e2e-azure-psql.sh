@@ -42,7 +42,7 @@ EOF
 )"
 
 # install package
-# kubectl create namespace ${PACKAGE_NAMESPACE} || true
+kubectl create namespace ${PACKAGE_NAMESPACE} || true
 ytt -f config/carvel/package-install -v refName="${PACKAGE_METADATA_NAME}" -v namespace=${PACKAGE_NAMESPACE} -v version=${PACKAGE_VERSION} -v values="${VALUES}" | kubectl apply -f -
 
 # create claim
