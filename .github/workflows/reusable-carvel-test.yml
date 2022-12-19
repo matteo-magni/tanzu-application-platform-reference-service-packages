@@ -99,8 +99,10 @@ jobs:
       - name: Install Carvel repository
         run: |
           REPO_MANIFEST="https://github.com/${{ github.repository }}/releases/download/${{ inputs.repo_version }}/package-repository.yml"
-          kubectl apply -n ${KAPP_GLOBAL_NAMESPACE} -f ${REPO_MANIFEST}
-          REPO_NAME=$(curl -sSfL ${REPO_MANIFEST} | yq '.metadata.name')
+          REPO_MANIFEST_FILE=$(mktemp)
+          curl -sSfL -o ${REPO_MANIFEST_FILE} ${REPO_MANIFEST}
+          REPO_NAME=$(yq '.metadata.name' ${REPO_MANIFEST_FILE})
+          kubectl apply -n ${KAPP_GLOBAL_NAMESPACE} -f ${REPO_MANIFEST_FILE}
           time kubectl wait --for=condition=ReconcileSucceeded=True packagerepositories.packaging.carvel.dev -n ${KAPP_GLOBAL_NAMESPACE} ${REPO_NAME}
 
       - name: List available packages
