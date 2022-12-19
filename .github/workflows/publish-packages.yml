@@ -104,7 +104,7 @@ jobs:
           # and remove them at the end of the script
           BRANCHES=
           for PACKAGE_DIR in $(jq -r '.include[]|.path' <<<$PACKAGES_LIST); do
-            PACKAGE_METADATA_NAME=$(yq e '.metadata.name' packages/${PACKAGE_DIR}/package-metadata.yml)
+            PACKAGE_METADATA_NAME=$(yq e '.metadata.name' ${PACKAGES_BASEDIR}/${PACKAGE_DIR}/package-metadata.yml)
             PACKAGE_BRANCH="${PACKAGE_METADATA_NAME}/${PACKAGE_VERSION}"
             BRANCHES="${BRANCHES} ${PACKAGE_BRANCH}"
             git rebase origin/${PACKAGE_BRANCH}
@@ -123,6 +123,7 @@ jobs:
           # create the pull request against CURRENT_BRANCH
           gh pr create --base ${CURRENT_BRANCH} --title "Carvel repository release at commit ${{ github.sha }}" --body "${COMMIT_MESSAGE}"
         env:
+          PACKAGES_BASEDIR: ${{ needs.list-packages.outputs.basedir }}
           PACKAGES_LIST: ${{ needs.list-packages.outputs.carvel }}
           GH_TOKEN: ${{ github.token }}
 
@@ -151,4 +152,6 @@ jobs:
       package_name: ${{ matrix.name }}
       package_provider: ${{ matrix.provider }}
       package_version: ${{ needs.bump-version.outputs.version }}
+      packages_basedir: ${{ needs.list-packages.outputs.basedir }}
+      package_path: ${{ matrix.path }}
     secrets: inherit
