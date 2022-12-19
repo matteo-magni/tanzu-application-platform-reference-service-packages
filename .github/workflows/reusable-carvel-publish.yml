@@ -21,10 +21,6 @@ on:
       package_provider:
         type: string
         required: true
-      package_build_values:
-        type: string
-        description: File name holding mandatory values for ytt templates to prevent build failure
-        default: build-values.yml
       repo_dir:
         type: string
         description: Directory path to hold the contents of the Carvel repository
@@ -56,7 +52,6 @@ env:
   PACKAGES_BASEDIR: ${{ inputs.packages_basedir }}
   PACKAGE_DIR: ${{ inputs.packages_basedir }}/${{ inputs.package_path }}
 
-  PACKAGE_BUILD_VALUES: ${{ inputs.package_build_values }}
   CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
 
 jobs:
