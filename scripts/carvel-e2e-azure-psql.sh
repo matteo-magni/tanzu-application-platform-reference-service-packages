@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-TIMEOUT=${TIMEOUT:-15m}
+TIMEOUT=${TIMEOUT:-10m}
 PACKAGE_NAMESPACE=${PACKAGE_NAMESPACE:-services}
 export APP_NAMESPACE=${APP_NAMESPACE:-services}
 PACKAGE_CLASS="azure-postgres"
@@ -11,7 +11,7 @@ APP_NAME=${APP_NAME:-spring-boot-postgres}
 pushd $(dirname $0)
 
 # install ASO and dependencies
-# ./carvel-azure-install-aso.sh
+./carvel-azure-install-aso.sh
 
 # prepare values file for package
 # VALUES_FILE=$(mktemp)
