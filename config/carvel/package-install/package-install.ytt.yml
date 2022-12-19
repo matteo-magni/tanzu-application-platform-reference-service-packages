@@ -1,13 +1,14 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:overlay", "overlay")
 
+#@ installName = data.values.installName or (data.values.refName + "-install")
 #@ secretName = data.values.refName + "-values"
 #@ serviceAccountName = data.values.refName + "-install"
 ---
 apiVersion: packaging.carvel.dev/v1alpha1
 kind: PackageInstall
 metadata:
-  name: #@ data.values.refName
+  name: #@ installName
 spec:
   serviceAccountName: #@ serviceAccountName
   packageRef:

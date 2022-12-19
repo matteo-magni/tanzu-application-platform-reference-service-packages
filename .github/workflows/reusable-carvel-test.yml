@@ -17,6 +17,13 @@ on:
       package_provider:
         type: string
         required: true
+      packages_basedir:
+        type: string
+        description: Packages base directory path
+        default: packages
+      package_path:
+        type: string
+        required: true
       kubernetes-version:
         type: string
         default: v1.24.6
@@ -38,6 +45,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+
+    env:
+      PACKAGE_VERSION: ${{ inputs.package_version }}
 
     steps:
 
@@ -116,13 +126,20 @@ jobs:
 
       - name: Test Carvel package
         run: |
-          [ -x ${SCRIPT} ] && ${SCRIPT}
+          export PACKAGE_METADATA_NAME=$(yq e '.metadata.name' ${PACKAGE_DIR}/package-metadata.yml)
+          echo PACKAGE_METADATA_NAME=${PACKAGE_METADATA_NAME} >> $GITHUB_ENV
+          if [ -x ${SCRIPT} ]; then
+            ${SCRIPT}
+          fi
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
+          PACKAGE_DIR: ${{ inputs.packages_basedir }}/${{ inputs.package_path }}
 
       - name: Cleanup Carvel package
         if: always()
         run: |
-          [ -x ${SCRIPT} ] && ${SCRIPT}
+          if [ -x ${SCRIPT} ]; then
+            ${SCRIPT}
+          fi
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}/cleanup.sh
