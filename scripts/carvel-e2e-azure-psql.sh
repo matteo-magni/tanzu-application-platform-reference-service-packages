@@ -57,7 +57,7 @@ ytt -f ./carvel-e2e-azure-psql/rbac.ytt.yml -v serviceAccount=${SA} -v namespace
 echo ">> Install package"
 kctrl package install -n ${PACKAGE_NAMESPACE} -i ${INSTALL_NAME} -p ${PACKAGE_METADATA_NAME} --version ${PACKAGE_VERSION} --values-file ${VALUES} --service-account-name ${SA} --wait=false
 
-RESTARTS_MAX=3
+RESTARTS_MAX=4
 RESTARTS_COUNT=0
 while [ $RESTARTS_COUNT -lt $RESTARTS_MAX ]; do
   echo ">> Waiting for stack ${NAME} to reconcile..."
