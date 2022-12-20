@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
-
 CERT_MANAGER_MANIFEST="https://github.com/jetstack/cert-manager/releases/download/v1.8.2/cert-manager.yaml"
 ASO_MANIFEST="https://github.com/Azure/azure-service-operator/releases/download/v2.0.0-beta.3/azureserviceoperator_v2.0.0-beta.3.yaml"
 ASO_NAMESPACE="azureserviceoperator-system"
@@ -15,6 +13,7 @@ kubectl wait --for=condition=Available apiservices.apiregistration.k8s.io v1.cer
 kubectl wait --for=condition=Available apiservices.apiregistration.k8s.io v1.acme.cert-manager.io
 
 # install ASO
+kubectl create ns ${ASO_NAMESPACE}
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
