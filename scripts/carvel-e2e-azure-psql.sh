@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
-TIMEOUT=${TIMEOUT:-10m}
+TIMEOUT=${TIMEOUT:-5m}
+MAX_RESTARTS=3
+
 PACKAGE_NAMESPACE=${PACKAGE_NAMESPACE:-services}
 export APP_NAMESPACE=${APP_NAMESPACE:-services}
 PACKAGE_CLASS="azure-postgres"
@@ -49,13 +51,18 @@ kubectl create namespace ${PACKAGE_NAMESPACE} || true
 
 ytt -f ../config/carvel/package-install -v refName="${PACKAGE_METADATA_NAME}" -v namespace=${PACKAGE_NAMESPACE} -v version=${PACKAGE_VERSION} -v values="${VALUES}" | kubectl apply -f -
 
-kubectl -n ${PACKAGE_NAMESPACE} wait --for=condition=ReconcileSucceeded --timeout=${TIMEOUT} packageinstalls.packaging.carvel.dev ${PACKAGE_METADATA_NAME}
+echo "Waiting for stack ${NAME} to reconcile"
 
-if [ $? != 0 ]; then
-  # try one more time to make sure the package installation did not fail because of ASO
-  kubectl -n azureserviceoperator-system rollout restart deployments.apps azureserviceoperator-controller-manager
-  kubectl -n ${PACKAGE_NAMESPACE} wait --for=condition=ReconcileSucceeded --timeout=${TIMEOUT} packageinstalls.packaging.carvel.dev ${PACKAGE_METADATA_NAME}
-fi
+RESTARTS_COUNT=0
+while [ $RESTARTS_COUNT -lt $MAX_RESTARTS ]; do
+  kubectl -n ${PACKAGE_NAMESPACE} wait --for=condition=ReconcileSucceeded --timeout=${TIMEOUT} packageinstalls.packaging.carvel.dev ${PACKAGE_METADATA_NAME} && AGAIN=0 || AGAIN=1
+  if [ $AGAIN -eq 0 ]; then
+    RESTARTS_COUNT=$MAX_RESTARTS
+  else
+    let RESTARTS_COUNT=$RESTARTS_COUNT+1
+    kubectl -n azureserviceoperator-system rollout restart deployments.apps azureserviceoperator-controller-manager
+  fi
+done
 
 # run test
 SECRET_NAME="${NAME}-bindable"
