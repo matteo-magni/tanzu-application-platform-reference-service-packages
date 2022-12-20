@@ -27,4 +27,4 @@ stringData:
 EOF
 
 kubectl apply --server-side=true -f ${ASO_MANIFEST}
-kubectl -n ${ASO_NAMESPACE} wait --for=condition=Available --timeout=2m deployments.apps azureserviceoperator-controller-manager
+kubectl -n ${ASO_NAMESPACE} wait --for=condition=Available --timeout=5m deployments.apps azureserviceoperator-controller-manager

@@ -13,10 +13,7 @@ pushd $(dirname $0)
 # install ASO and dependencies
 ./carvel-azure-install-aso.sh
 
-# prepare values file for package
-# VALUES_FILE=$(mktemp)
-# trap "rm ${VALUES_FILE}" EXIT
-
+# install package
 NAME="${NAME:-$(dd if=/dev/urandom bs=20 count=1 2>/dev/null | sha1sum | head -c 20)}"
 LOCATION="${LOCATION:-westeurope}"
 PUBLIC_IP="$(curl -sSf https://api.ipify.org)"
