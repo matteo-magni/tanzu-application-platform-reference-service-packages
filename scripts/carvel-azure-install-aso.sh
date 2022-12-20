@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 CERT_MANAGER_MANIFEST="https://github.com/jetstack/cert-manager/releases/download/v1.8.2/cert-manager.yaml"
 ASO_MANIFEST="https://github.com/Azure/azure-service-operator/releases/download/v2.0.0-beta.3/azureserviceoperator_v2.0.0-beta.3.yaml"
 ASO_NAMESPACE="azureserviceoperator-system"
