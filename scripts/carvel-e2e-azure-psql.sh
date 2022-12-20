@@ -3,12 +3,11 @@
 set -euo pipefail
 
 TIMEOUT=${TIMEOUT:-5m}
-MAX_RESTARTS=3
 
+export NAME="${NAME:-$(dd if=/dev/urandom bs=20 count=1 2>/dev/null | sha1sum | head -c 20)}"
 PACKAGE_NAMESPACE=${PACKAGE_NAMESPACE:-services}
 export APP_NAMESPACE=${APP_NAMESPACE:-services}
-PACKAGE_CLASS="azure-postgres"
-APP_NAME=${APP_NAME:-spring-boot-postgres}
+export APP_NAME=${APP_NAME:-${NAME}}
 
 pushd $(dirname $0)
 
@@ -16,11 +15,11 @@ pushd $(dirname $0)
 ./carvel-azure-install-aso.sh
 
 # install package
-NAME="${NAME:-$(dd if=/dev/urandom bs=20 count=1 2>/dev/null | sha1sum | head -c 20)}"
 LOCATION="${LOCATION:-westeurope}"
 PUBLIC_IP="$(curl -sSf https://api.ipify.org)"
 
-VALUES="$(cat <<EOF
+VALUES=$(mktemp)
+cat <<EOF >$VALUES
 ---
 name: ${NAME}
 namespace: ${PACKAGE_NAMESPACE}
@@ -42,23 +41,31 @@ firewall_rules:
 
 resource_group:
   use_existing: false
-  name: aso-psql-${NAME}
+  name: carvel-test-${NAME}
 EOF
-)"
+trap "rm ${VALUES}" EXIT
 
 # install package
 kubectl create namespace ${PACKAGE_NAMESPACE} || true
 
-ytt -f ../config/carvel/package-install -v refName="${PACKAGE_METADATA_NAME}" -v namespace=${PACKAGE_NAMESPACE} -v version=${PACKAGE_VERSION} -v values="${VALUES}" | kubectl apply -f -
+SA=${PACKAGE_METADATA_NAME}
+INSTALL_NAME=${PACKAGE_METADATA_NAME}
 
-echo "Waiting for stack ${NAME} to reconcile"
+echo ">> Prepare RBAC"
+ytt -f ./carvel-e2e-azure-psql/rbac.ytt.yml -v serviceAccount=${SA} -v namespace=${PACKAGE_NAMESPACE} | kubectl apply -f -
 
+echo ">> Install package"
+kctrl package install -n ${PACKAGE_NAMESPACE} -i ${INSTALL_NAME} -p ${PACKAGE_METADATA_NAME} --version ${PACKAGE_VERSION} --values-file ${VALUES} --service-account-name ${SA} --wait=false
+
+RESTARTS_MAX=3
 RESTARTS_COUNT=0
-while [ $RESTARTS_COUNT -lt $MAX_RESTARTS ]; do
-  kubectl -n ${PACKAGE_NAMESPACE} wait --for=condition=ReconcileSucceeded --timeout=${TIMEOUT} packageinstalls.packaging.carvel.dev ${PACKAGE_METADATA_NAME} && AGAIN=0 || AGAIN=1
+while [ $RESTARTS_COUNT -lt $RESTARTS_MAX ]; do
+  echo ">> Waiting for stack ${NAME} to reconcile..."
+  kubectl -n ${PACKAGE_NAMESPACE} wait --for=condition=ReconcileSucceeded --timeout=${TIMEOUT} packageinstalls.packaging.carvel.dev ${INSTALL_NAME} && AGAIN=0 || AGAIN=1
   if [ $AGAIN -eq 0 ]; then
-    RESTARTS_COUNT=$MAX_RESTARTS
+    RESTARTS_COUNT=$RESTARTS_MAX
   else
+    # ASO needs to be kicked because it conflicts with kapp-controller for taking ownership of Azure resources
     let RESTARTS_COUNT=$RESTARTS_COUNT+1
     kubectl -n azureserviceoperator-system rollout restart deployments.apps azureserviceoperator-controller-manager
   fi

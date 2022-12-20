@@ -55,7 +55,6 @@ jobs:
         uses: vmware-tanzu/carvel-setup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          only: ytt
 
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1.4.0

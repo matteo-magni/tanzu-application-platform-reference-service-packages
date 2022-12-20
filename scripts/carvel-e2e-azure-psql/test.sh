@@ -10,7 +10,7 @@ APP_NAMESPACE=${APP_NAMESPACE:-default}
 
 echo ">> Installing Test Application"
 MANIFEST="https://raw.githubusercontent.com/joostvdg/spring-boot-postgres/main/kubernetes/deployment.yaml"
-curl -sSfL ${MANIFEST} | ytt -f - -f overlay.ytt.yml -v name=${TEST_APP_NAME} -v secret=${SECRET_NAME} | kubectl apply -n ${APP_NAMESPACE} -f -
+curl -sSfL ${MANIFEST} | ytt -f - -f app-overlay.ytt.yml -v name=${TEST_APP_NAME} -v secret=${SECRET_NAME} | kubectl apply -n ${APP_NAMESPACE} -f -
 
 kubectl -n ${APP_NAMESPACE} get deployments.apps
 
@@ -29,21 +29,13 @@ trap "echo '>> Killing Port Forward' && kill -9 ${PORT_FORWARD_PID}" EXIT
 sleep 10
 
 echo ">> Testing Application"
-curl -sSfL "http://localhost:8080"
-curl -sSfL --header "Content-Type: application/json" --request POST --data '{"name":"Piet"}' http://localhost:8080/create
-curl -sSfL --header "Content-Type: application/json" --request POST --data '{"name":"Andrea"}' http://localhost:8080/create
-
-echo
-echo "2 records written"
-echo
+curl -sSfL "http://localhost:8080" && echo
+echo -n ">> Writing record: " && curl -sSfL --header "Content-Type: application/json" --request POST --data '{"name":"Piet"}' http://localhost:8080/create && echo
+echo -n ">> Writing record: " && curl -sSfL --header "Content-Type: application/json" --request POST --data '{"name":"Andrea"}' http://localhost:8080/create && echo
 
 HTTP_RESULT=$(curl -sSfL "http://localhost:8080")
 [ $(jq 'map(select(.name == "Piet")) | length'<<<$HTTP_RESULT) -eq 1 ]
 [ $(jq 'map(select(.name == "Andrea")) | length'<<<$HTTP_RESULT) -eq 1 ]
-
-echo
-echo "2 records read"
-echo
 
 echo "TEST PASSED"
 

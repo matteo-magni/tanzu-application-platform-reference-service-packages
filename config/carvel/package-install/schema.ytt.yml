@@ -1,8 +1,5 @@
 #@data/values-schema
 ---
-#@schema/desc "Name for the package installation"
-installName: ""
-
 #@schema/desc "The package full name as from .spec.refName"
 #@schema/validation min_len=1
 refName: ""
@@ -10,10 +7,3 @@ refName: ""
 #@schema/desc "The namespace where the package must be installed"
 #@schema/validation min_len=1
 namespace: services
-
-#@schema/desc "The package version to install"
-#@schema/validation min_len=1
-version: ""
-
-#@schema/desc "The values needed for configuring the package"
-values: ""
