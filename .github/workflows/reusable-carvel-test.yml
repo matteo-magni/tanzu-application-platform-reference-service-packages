@@ -12,7 +12,7 @@ on:
         type: string
         required: true
       package_prerelease:
-        type: boolean
+        type: string
         required: true
       package_name:
         type: string
