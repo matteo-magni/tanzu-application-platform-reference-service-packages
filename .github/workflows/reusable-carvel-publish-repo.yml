@@ -37,8 +37,8 @@ on:
         value: ${{ jobs.publish.outputs.registry }}
       repository:
         value: ${{ jobs.publish.outputs.repository }}
-      pull-request-number:
-        value: ${{ jobs.prepare.outputs.pull-request-number }}
+      pull_request_number:
+        value: ${{ jobs.prepare.outputs.pull_request_number }}
 
 env:
   CARVEL_REPO_DIR: ${{ inputs.repo_dir }}
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      pull-request-number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
+      pull_request_number: ${{ steps.pr.outputs.PULL_REQUEST_NUMBER }}
 
     steps:
       

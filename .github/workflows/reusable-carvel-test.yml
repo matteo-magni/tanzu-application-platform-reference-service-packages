@@ -12,7 +12,7 @@ on:
         type: string
         required: true
       package_prerelease:
-        type: boolean
+        type: string
         required: true
       package_name:
         type: string
@@ -142,7 +142,7 @@ jobs:
           export PACKAGE_METADATA_NAME=$(yq e '.metadata.name' ${PACKAGE_DIR}/package-metadata.yml)
           echo PACKAGE_METADATA_NAME=${PACKAGE_METADATA_NAME} >> $GITHUB_ENV
 
-          if [ "$PRERELEASE" =~ ^[tT][rR][uU][eE]$ ]; then
+          if [[ "$PRERELEASE" =~ ^[tT][rR][uU][eE]$ ]]; then
             if [ -x ${SCRIPT} ]; then
               ${SCRIPT}
             else

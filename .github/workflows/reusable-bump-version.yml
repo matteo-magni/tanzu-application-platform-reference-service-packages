@@ -25,7 +25,7 @@ jobs:
 
     outputs:
       version: ${{ steps.bump.outputs.new_tag }}
-      is_prerelease: ${{ steps.bump.outputs.is_prerelease }}
+      is_prerelease: ${{ steps.pre.outputs.is_prerelease }}
 
     steps:
 
