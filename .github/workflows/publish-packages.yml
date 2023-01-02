@@ -93,6 +93,6 @@ jobs:
       package_version: ${{ needs.bump-version.outputs.version }}
       packages_basedir: ${{ needs.list-packages.outputs.basedir }}
       package_path: ${{ matrix.path }}
-      pull-request-number: ${{ needs.carvel-publish-repo.outputs.pull-request-number}}
+      pull_request_number: ${{ needs.carvel-publish-repo.outputs.pull_request_number}}
       package_prerelease: ${{ needs.bump-version.outputs.is_prerelease }}
     secrets: inherit

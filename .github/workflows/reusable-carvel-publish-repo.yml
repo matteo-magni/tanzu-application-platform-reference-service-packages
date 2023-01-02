@@ -28,7 +28,7 @@ on:
       package_version:
         type: string
         required: true
-      kctrl-version:
+      kctrl_version:
         type: string
         default: v0.43.2
 
@@ -130,7 +130,7 @@ jobs:
         uses: vmware-tanzu/carvel-setup-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          kctrl: ${{ inputs.kctrl-version }}
+          kctrl: ${{ inputs.kctrl_version }}
 
       - name: Kctrl Release
         id: kctrl

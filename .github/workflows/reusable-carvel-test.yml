@@ -27,19 +27,19 @@ on:
       package_path:
         type: string
         required: true
-      pull-request-number:
+      pull_request_number:
         type: string
         required: true
-      kubernetes-version:
+      kubernetes_version:
         type: string
         default: v1.24.6
-      kind-version:
+      kind_version:
         type: string
         default: v0.16.0
-      kapp-controller-version:
+      kapp_controller_version:
         type: string
         default: v0.43.2
-      secretgen-controller-version:
+      secretgen_controller_version:
         type: string
         default: v0.12.0
 
@@ -66,9 +66,9 @@ jobs:
         uses: helm/kind-action@v1.4.0
         with:
           verbosity: 5
-          version: ${{ inputs.kind-version }}
-          kubectl_version: ${{ inputs.kubernetes-version }}
-          node_image: kindest/node:${{ inputs.kubernetes-version }}
+          version: ${{ inputs.kind_version }}
+          kubectl_version: ${{ inputs.kubernetes_version }}
+          node_image: kindest/node:${{ inputs.kubernetes_version }}
 
       - name: Verify Cluster
         run: |
@@ -79,8 +79,8 @@ jobs:
 
       - name: Install kapp-controller
         run: |
-          MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp-controller-version }}/release.yml"
-          if [[ "${{ inputs.kapp-controller-version }}" == "latest" ]]; then
+          MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/download/${{ inputs.kapp_controller_version }}/release.yml"
+          if [[ "${{ inputs.kapp_controller_version }}" == "latest" ]]; then
             MANIFEST="https://github.com/vmware-tanzu/carvel-kapp-controller/releases/latest/download/release.yml"
           fi
 
@@ -93,8 +93,8 @@ jobs:
 
       - name: Install secretgen-controller
         run: |
-          MANIFEST="https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/download/${{ inputs.secretgen-controller-version }}/release.yml"
-          if [[ "${{ inputs.secretgen-controller-version }}" == "latest" ]]; then
+          MANIFEST="https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/download/${{ inputs.secretgen_controller_version }}/release.yml"
+          if [[ "${{ inputs.secretgen_controller_version }}" == "latest" ]]; then
             MANIFEST="https://github.com/vmware-tanzu/carvel-secretgen-controller/releases/latest/download/release.yml"
           fi
 
@@ -158,7 +158,7 @@ jobs:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
           PACKAGE_DIR: ${{ inputs.packages_basedir }}/${{ inputs.package_path }}
           PRERELEASE: ${{ inputs.package_prerelease }}
-          PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
+          PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
 
       - name: Cleanup Carvel package
         if: always()
