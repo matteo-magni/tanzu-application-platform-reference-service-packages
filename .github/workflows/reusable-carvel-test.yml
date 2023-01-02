@@ -159,6 +159,7 @@ jobs:
           PACKAGE_DIR: ${{ inputs.packages_basedir }}/${{ inputs.package_path }}
           PRERELEASE: ${{ inputs.package_prerelease }}
           PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Cleanup Carvel package
         if: always()
