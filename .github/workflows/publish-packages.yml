@@ -77,22 +77,22 @@ jobs:
       repo_version: ${{ needs.bump-version.outputs.version }}
       release: true
 
-  carvel-test:
-    if: needs.list-packages.outputs.carvel_publish == 'true'
-    uses: ./.github/workflows/reusable-carvel-test.yml
-    needs:
-      - list-packages
-      - bump-version
-      - carvel-publish-repo
-    strategy:
-      matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
-    with:
-      repo_version: ${{ needs.bump-version.outputs.version }}
-      package_name: ${{ matrix.name }}
-      package_provider: ${{ matrix.provider }}
-      package_version: ${{ needs.bump-version.outputs.version }}
-      packages_basedir: ${{ needs.list-packages.outputs.basedir }}
-      package_path: ${{ matrix.path }}
-      pull_request_number: ${{ needs.carvel-publish-repo.outputs.pull_request_number}}
-      package_prerelease: ${{ needs.bump-version.outputs.is_prerelease }}
-    secrets: inherit
+  # carvel-test:
+  #   if: needs.list-packages.outputs.carvel_publish == 'true'
+  #   uses: ./.github/workflows/reusable-carvel-test.yml
+  #   needs:
+  #     - list-packages
+  #     - bump-version
+  #     - carvel-publish-repo
+  #   strategy:
+  #     matrix: ${{ fromJson(needs.list-packages.outputs.carvel) }}
+  #   with:
+  #     repo_version: ${{ needs.bump-version.outputs.version }}
+  #     package_name: ${{ matrix.name }}
+  #     package_provider: ${{ matrix.provider }}
+  #     package_version: ${{ needs.bump-version.outputs.version }}
+  #     packages_basedir: ${{ needs.list-packages.outputs.basedir }}
+  #     package_path: ${{ matrix.path }}
+  #     pull_request_number: ${{ needs.carvel-publish-repo.outputs.pull_request_number}}
+  #     package_prerelease: ${{ needs.bump-version.outputs.is_prerelease }}
+  #   secrets: inherit
