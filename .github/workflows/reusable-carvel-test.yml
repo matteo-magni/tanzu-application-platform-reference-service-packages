@@ -11,6 +11,9 @@ on:
       package_version:
         type: string
         required: true
+      package_prerelease:
+        type: boolean
+        required: true
       package_name:
         type: string
         required: true
@@ -22,6 +25,9 @@ on:
         description: Packages base directory path
         default: packages
       package_path:
+        type: string
+        required: true
+      pull-request-number:
         type: string
         required: true
       kubernetes-version:
@@ -135,12 +141,24 @@ jobs:
         run: |
           export PACKAGE_METADATA_NAME=$(yq e '.metadata.name' ${PACKAGE_DIR}/package-metadata.yml)
           echo PACKAGE_METADATA_NAME=${PACKAGE_METADATA_NAME} >> $GITHUB_ENV
-          if [ -x ${SCRIPT} ]; then
+
+          if [ "$PRERELEASE" =~ ^[tT][rR][uU][eE]$ ]; then
+            if [ -x ${SCRIPT} ]; then
+              ${SCRIPT}
+            else
+              # no pre-release test script provided
+              gh label create -c ffaa00 --force untested
+              gh pr edit $PULL_REQUEST_NUMBER --add-label untested
+              gh pr comment $PULL_REQUEST_NUMBER --body "WARNING - package ${PACKAGE_METADATA_NAME}/${PACKAGE_VERSION} has not been tested"
+            fi
+          else
             ${SCRIPT}
           fi
         env:
           SCRIPT: ./scripts/carvel-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
           PACKAGE_DIR: ${{ inputs.packages_basedir }}/${{ inputs.package_path }}
+          PRERELEASE: ${{ inputs.package_prerelease }}
+          PULL_REQUEST_NUMBER: ${{ inputs.pull-request-number }}
 
       - name: Cleanup Carvel package
         if: always()
