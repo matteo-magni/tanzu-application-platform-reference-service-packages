@@ -48,6 +48,9 @@ rebaseRules:
   - [metadata, annotations, serviceoperator.azure.com/resource-id]
   - [metadata, annotations, serviceoperator.azure.com/poller-resume-id]  
   - [metadata, annotations, serviceoperator.azure.com/poller-resume-token]
+  - [status]
+  - [metadata, finalizers]
+  - [metadata, resourceVersion]
   type: copy
   sources: [new, existing]
   resourceMatchers: *flexibleServerResources
