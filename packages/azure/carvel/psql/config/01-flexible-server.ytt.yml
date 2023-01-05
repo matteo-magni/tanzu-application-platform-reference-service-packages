@@ -77,10 +77,10 @@ metadata:
 #@ if/end data.values.namespace:
   namespace: #@ data.values.namespace
   annotations:
+    kapp.k14s.io/update-strategy: skip
     serviceoperator.azure.com/operator-namespace: #@ data.values.aso_controller_namespace
 #@ if/end data.values.resource_group.use_existing:
     serviceoperator.azure.com/reconcile-policy: skip
-    kapp.k14s.io/noop: ""
 spec:
   azureName: #@ data.values.resource_group.name
   location: #@ data.values.location
