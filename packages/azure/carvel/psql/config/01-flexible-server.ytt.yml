@@ -78,6 +78,7 @@ metadata:
   namespace: #@ data.values.namespace
   annotations:
     kapp.k14s.io/update-strategy: skip
+    kapp.k14s.io/exists: ""
     serviceoperator.azure.com/operator-namespace: #@ data.values.aso_controller_namespace
 #@ if/end data.values.resource_group.use_existing:
     serviceoperator.azure.com/reconcile-policy: skip
