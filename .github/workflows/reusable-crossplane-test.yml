@@ -28,6 +28,9 @@ on:
         type: string
         default: v0.16.0
 
+    secrets:
+      AZURE_CONFIG:
+        required: false
 jobs:
 
   test:
@@ -42,7 +45,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install UXP
+      - name: Install up CLI
         run: |
           curl -sL "https://cli.upbound.io" | sh
           sudo mv up /usr/local/bin/
@@ -63,21 +66,31 @@ jobs:
           kubectl cluster-info
           kubectl get storageclass standard
 
-      - name: Create Azure Config Secret
-        if: inputs.package_provider == 'azure'
+      - name: Install Universal Crossplane
         run: |
-          kubectl create namespace ${CROSSPLANE_NAMESPACE}
-          kubectl create secret generic azure-secret -n ${CROSSPLANE_NAMESPACE} --from-literal=creds='${{ secrets.AZURE_CONFIG }}'
+          ./scripts/crossplane-install-uxp.sh ${UXP_VERSION}
+        env:
+          UXP_VERSION: v1.10.1-up.1
 
       - name: Test Crossplane package
         run: |
+          export CLAIM_NAME="mongodb-$(dd if=/dev/urandom bs=20 count=1 2>/dev/null | sha1sum | head -c 20)"
+          export TEST_APP_NAME=${CLAIM_NAME}
+          export CONFIG_NAME=${CLAIM_NAME}
+
+          echo CLAIM_NAME="${CLAIM_NAME}" >> $GITHUB_ENV
+          echo TEST_APP_NAME="${TEST_APP_NAME}" >> $GITHUB_ENV
+          echo CONFIG_NAME="${CONFIG_NAME}" >> $GITHUB_ENV
+
           [ -x ${SCRIPT} ] && ${SCRIPT} || true
         env:
-          SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_name }}.sh
+          INSTALL_PROVIDER: "true"
+          AZURE_CONFIG: ${{ secrets.AZURE_CONFIG }}
+          SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}.sh
 
       - name: Cleanup Crossplane package
         if: always()
         run: |
           [ -x ${SCRIPT} ] && ${SCRIPT} || true
         env:
-          SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_name }}/cleanup.sh
+          SCRIPT: ./scripts/crossplane-e2e-${{ inputs.package_provider }}-${{ inputs.package_name }}/cleanup.sh
