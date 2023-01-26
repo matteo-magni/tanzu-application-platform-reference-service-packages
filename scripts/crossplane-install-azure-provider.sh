@@ -39,7 +39,7 @@ kubectl wait --for=condition=Healthy --timeout=5m providers.pkg.crossplane.io ${
 kubectl -n upbound-system get deployments.apps
 
 echo
-kubectl get providers.pkg.crossplane.io ${PROVIDER_NAME} -o yaml
+kubectl get providers.pkg.crossplane.io ${PROVIDER_NAME}
 echo
-kubectl api-resources --api-group azure.upbound.io -o name | xargs -rn1 kubectl get crd -o yaml
+kubectl api-resources --api-group azure.upbound.io -o name | xargs -rn1 kubectl get crd
 echo
