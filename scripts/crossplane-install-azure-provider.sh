@@ -36,3 +36,9 @@ spec:
 EOF
 
 kubectl wait --for=condition=Healthy providers.pkg.crossplane.io ${PROVIDER_NAME}
+
+echo
+kubectl get providers.pkg.crossplane.io ${PROVIDER_NAME} -o yaml
+echo
+kubectl api-resources --api-group azure.upbound.io -o name | xargs -rn1 kubectl get crd -o yaml
+echo
