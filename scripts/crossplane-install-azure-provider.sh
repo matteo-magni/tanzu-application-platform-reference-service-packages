@@ -35,7 +35,7 @@ spec:
       key: creds
 EOF
 
-kubectl wait --for=condition=Healthy providers.pkg.crossplane.io ${PROVIDER_NAME}
+kubectl wait --for=condition=Healthy --timeout=5m providers.pkg.crossplane.io ${PROVIDER_NAME}
 
 echo
 kubectl get providers.pkg.crossplane.io ${PROVIDER_NAME} -o yaml
