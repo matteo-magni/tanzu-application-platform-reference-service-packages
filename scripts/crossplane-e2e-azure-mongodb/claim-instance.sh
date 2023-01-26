@@ -6,6 +6,7 @@ CLAIM_NAME=${1:-${CLAIM_NAME:-}}
 [ -z "${CLAIM_NAME:-}" ] && ( echo "The CLAIM_NAME environment variable must be defined" ; exit 1 )
 [ -z "${CROSSPLANE_NAMESPACE:-}" ] && ( echo "The CROSSPLANE_NAMESPACE environment variable must be defined" ; exit 1 )
 
+kubectl api-resources -o name --api-group azure.ref.services.apps.tanzu.vmware.com
 kubectl get xmongodbinstances.azure.ref.services.apps.tanzu.vmware.com,mongodbinstances.azure.ref.services.apps.tanzu.vmware.com
 
 echo ">> Claiming a MongoDBInstance"
