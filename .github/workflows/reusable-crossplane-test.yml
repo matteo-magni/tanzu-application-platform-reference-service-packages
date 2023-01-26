@@ -45,6 +45,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Install Carvel tools
+        uses: vmware-tanzu/carvel-setup-action@v1
+        with:
+          only: ytt
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install up CLI
         run: |
           curl -sL "https://cli.upbound.io" | sh
