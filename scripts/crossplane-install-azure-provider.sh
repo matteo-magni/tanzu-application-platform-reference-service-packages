@@ -35,4 +35,4 @@ spec:
       key: creds
 EOF
 
-kubectl get providers.pkg.crossplane.io ${PROVIDER_NAME}
+kubectl wait --for=condition=Healthy providers.pkg.crossplane.io ${PROVIDER_NAME}
