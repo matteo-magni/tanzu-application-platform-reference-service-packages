@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+set -x
 
 CONFIG_IMAGE=${1:-${CONFIG_IMAGE:-}}
 CONFIG_VERSION=${2:-${CONFIG_VERSION:-}}
