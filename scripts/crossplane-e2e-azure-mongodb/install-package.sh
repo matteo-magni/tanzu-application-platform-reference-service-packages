@@ -29,5 +29,7 @@ kubectl wait --for=condition=Healthy configuration ${CONFIG_NAME}
 kubectl get configuration
 kubectl describe configurationrevisions.pkg.crossplane.io
 kubectl wait --for=condition=Available apiservices.apiregistration.k8s.io v1alpha1.azure.ref.services.apps.tanzu.vmware.com
+echo
+kubectl api-resources --api-group azure.ref.services.apps.tanzu.vmware.com
 
 sleep 1
